@@ -1,0 +1,67 @@
+﻿<Page x:Class="WpfApp1.Views.NotificationPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:local="clr-namespace:WpfApp1.Views"
+
+      Title="Powiadomienia">
+
+    <Page.Resources>
+        <!-- Style Expander, żeby mieć efekt hover i ładne zaokrąglenia -->
+        <Style TargetType="Expander">
+            <Setter Property="Margin" Value="0,0,0,10"/>
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="BorderBrush" Value="Gray"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="8"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Expander">
+                        <Border x:Name="Border"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="5"
+                                Padding="{TemplateBinding Padding}">
+                            <StackPanel>
+                                <ToggleButton x:Name="HeaderSite"
+                                              Content="{TemplateBinding Header}"
+                                              FontWeight="Bold"
+                                              FontSize="14"
+                                              Background="Transparent"
+                                              BorderThickness="0"
+                                              Foreground="Black"
+                                              HorizontalContentAlignment="Left"/>
+                                <ContentPresenter x:Name="ExpandSite"
+                                                  Visibility="Collapsed"
+                                                  Margin="10,5,0,0"/>
+                            </StackPanel>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger SourceName="HeaderSite" Property="IsChecked" Value="True">
+                                <Setter TargetName="ExpandSite" Property="Visibility" Value="Visible"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Border" Property="Background" Value="#FFECECEC"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Page.Resources>
+    <DockPanel LastChildFill="True">
+        <local:MenuControl x:Name="TopMenu" DockPanel.Dock="Top"/>
+
+        <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="10">
+            <ItemsControl ItemsSource="{Binding Notifications}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Expander Header="{Binding Title}" Expanded="Expander_Expanded">
+                            <TextBlock Text="{Binding Message}" TextWrapping="Wrap" Margin="10,5,0,0"/>
+                        </Expander>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+    </DockPanel>
+</Page>

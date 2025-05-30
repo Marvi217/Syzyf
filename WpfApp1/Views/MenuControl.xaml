@@ -1,0 +1,31 @@
+﻿<UserControl x:Class="WpfApp1.Views.MenuControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Height="50" Background="Transparent">
+    <Grid Margin="10">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto"/>
+            <!-- dla logo -->
+            <ColumnDefinition Width="*"/>
+            <!-- przestrzeń pośrodku -->
+            <ColumnDefinition Width="Auto"/>
+            <!-- dla przycisków -->
+        </Grid.ColumnDefinitions>
+
+        <!-- Logo -->
+        <Image Source="C:\Users\pc\source\repos\WpfApp1\WpfApp1\Resources\logo.png"
+           Height="50" VerticalAlignment="Center"
+           Grid.Column="0" MouseLeftButtonDown="Logo_MouseLeftButtonDown" />
+
+
+        <!-- Przyciski -->
+        <StackPanel Orientation="Horizontal"
+                    HorizontalAlignment="Right"
+                    Grid.Column="2">
+            <Button x:Name="AddEmployeeButton" Content="Dodaj pracownika" Click="AddEmployeeButton_Click" Visibility="Collapsed" Margin="5"/>
+            <Button x:Name="ProjectsButton" Content="Projekty" Margin="5" Click="ProjectsButton_Click"/>
+            <Button x:Name="NotificationsButton" Content="Powiadomienia" Margin="5" Click="NotificationsButton_Click"/>
+            <Button x:Name="AccountButton" Content="Konto" Margin="5" Click="AccountButton_Click"/>
+        </StackPanel>
+    </Grid>
+</UserControl>

@@ -1,0 +1,12 @@
+.vs/
+bin/
+obj/
+*.user
+*.suo
+*.rsuser
+*.userosscache
+*.sln.docstates
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
