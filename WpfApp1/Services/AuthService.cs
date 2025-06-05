@@ -1,9 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using Microsoft.EntityFrameworkCore;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using WpfApp1.Data;
+using WpfApp1.Model;
 
 namespace WpfApp1.Services
 {
@@ -16,11 +14,11 @@ namespace WpfApp1.Services
             _context = context;
         }
 
-        public bool Login(string login, string password)
+        public User? Authenticate(string login, string password)
         {
-            var user = _context.Users.FirstOrDefault(u => u.Login == login && u.Password == password);
-            return user != null;
+            return _context.Users
+                .Include(u => u.Employee)
+                .FirstOrDefault(u => u.Login == login && u.Password == password);
         }
     }
-
 }
