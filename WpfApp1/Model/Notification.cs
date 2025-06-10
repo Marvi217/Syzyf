@@ -17,6 +17,9 @@ namespace WpfApp1.Model
         [Column("message")]
         public string Message { get; set; }
 
+        [Column("tag")]
+        public string Tag { get; set; }
+
         [Column("msg_from")]
         public long FromId { get; set; }
 

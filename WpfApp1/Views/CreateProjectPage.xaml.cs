@@ -74,6 +74,7 @@ namespace WpfApp1.Views
                     FromId = _user.Id,
                     ToId = new List<long> { recipient.Id },
                     Title = "Karta Projektu",
+                    Tag = "empty",
                     Message = message,
                     IsRead = false
                 };
@@ -98,10 +99,6 @@ namespace WpfApp1.Views
         private string GenerateProjectCardMessage()
         {
             string senderName = $"{_user.Employee?.FirstName} {_user.Employee?.LastName}".Trim();
-            if (string.IsNullOrEmpty(senderName))
-            {
-                senderName = _user.Login;
-            }
 
             return $@"Dzień dobry,
 

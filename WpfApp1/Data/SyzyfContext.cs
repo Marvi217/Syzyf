@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection.Emit;
-using System.Text;
-using System.Threading.Tasks;
-using WpfApp1.Model;
+﻿using WpfApp1.Model;
 using WpfApp1.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -122,15 +116,14 @@ namespace WpfApp1.Data
                 entity.Property(p => p.ClientId).HasColumnName("client_id");
                 entity.Property(p => p.NumberOfPeople).HasColumnName("number_of_people");
                 entity.Property(p => p.IsSalaryVisible).HasColumnName("is_salary_visible");
-                entity.Property(p => p.ContactFullName).HasColumnName("contact_full_name").HasMaxLength(255);
-                entity.Property(p => p.ContactEmail).HasColumnName("contact_email").HasMaxLength(255);
-                entity.Property(p => p.ContactPhone).HasColumnName("contact_phone").HasMaxLength(255).IsRequired(false);
                 entity.Property(p => p.JobTitle).HasColumnName("job_title").HasMaxLength(255);
+                entity.Property(p => p.JobLevels).HasColumnName("job_levels");
                 entity.Property(p => p.Department).HasColumnName("department").HasMaxLength(255);
                 entity.Property(p => p.MainDuties).HasColumnName("main_duties");
                 entity.Property(p => p.AdditionalDuties).HasColumnName("additional_duties").IsRequired(false);
                 entity.Property(p => p.DevelopmentOpportunities).HasColumnName("development_opportunities").IsRequired(false);
                 entity.Property(p => p.PlannedHiringDate).HasColumnName("planned_hiring_date");
+                entity.Property(p => p.Education).HasColumnName("education").HasMaxLength(255);
                 entity.Property(p => p.PreferredStudyFields).HasColumnName("preferred_study_fields").HasMaxLength(255).IsRequired(false);
                 entity.Property(p => p.AdditionalCertifications).HasColumnName("additional_certifications").HasMaxLength(255).IsRequired(false);
                 entity.Property(p => p.RequiredExperience).HasColumnName("required_experience");
@@ -140,10 +133,12 @@ namespace WpfApp1.Data
                 entity.Property(p => p.RequiredLanguages).HasColumnName("required_languages");
                 entity.Property(p => p.PreferredLanguages).HasColumnName("preferred_languages").IsRequired(false);
                 entity.Property(p => p.GrossSalary).HasColumnName("gross_salary").HasMaxLength(255);
+                entity.Property(p => p.EmploymentsForms).HasColumnName("employment_forms").HasMaxLength(255).IsRequired(false);
                 entity.Property(p => p.BonusSystem).HasColumnName("bonus_system");
                 entity.Property(p => p.AdditionalBenefits).HasColumnName("additional_benefits").IsRequired(false);
                 entity.Property(p => p.WorkTools).HasColumnName("work_tools").IsRequired(false);
                 entity.Property(p => p.WorkPlace).HasColumnName("work_place").HasMaxLength(255);
+                entity.Property(p => p.WorkModes).HasColumnName("work_modes").HasMaxLength(255).IsRequired(false);
                 entity.Property(p => p.WorkingHours).HasColumnName("working_hours").HasMaxLength(255).IsRequired(false);
                 entity.Property(p => p.OtherRemarks).HasColumnName("other_remarks").IsRequired(false);
 
@@ -229,6 +224,7 @@ namespace WpfApp1.Data
 
                 entity.Property(n => n.Id).HasColumnName("id");
                 entity.Property(n => n.Title).HasColumnName("title").HasMaxLength(255);
+                entity.Property(n => n.Tag).HasColumnName("tag").HasMaxLength(50);
                 entity.Property(n => n.Message).HasColumnName("message");
                 entity.Property(n => n.FromId).HasColumnName("msg_from");
                 entity.Property(n => n.ToId).HasColumnName("msg_to");
