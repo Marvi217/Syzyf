@@ -34,7 +34,6 @@ namespace WpfApp1.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            // Mapowanie nazw tabel zgodnie z bazą danych
             modelBuilder.Entity<Candidate>().ToTable("candidates");
             modelBuilder.Entity<CandidateSelection>().ToTable("candidateselection");
             modelBuilder.Entity<Client>().ToTable("clients");
@@ -51,7 +50,6 @@ namespace WpfApp1.Data
             modelBuilder.Entity<Meeting>().ToTable("meetings");
             modelBuilder.Entity<MeetingParticipant>().ToTable("meeting_participants");
 
-            // Klucze główne
             modelBuilder.Entity<Candidate>().HasKey(c => c.Id);
             modelBuilder.Entity<CandidateSelection>().HasKey(cs => cs.Id);
             modelBuilder.Entity<Client>().HasKey(c => c.Id);
@@ -65,7 +63,6 @@ namespace WpfApp1.Data
             modelBuilder.Entity<Invoice>().HasKey(i => i.Id);
             modelBuilder.Entity<User>().HasKey(u => u.Id);
 
-            // Mapowanie kolumn zgodnie z bazą danych
             modelBuilder.Entity<Candidate>(entity =>
             {
                 entity.Property(c => c.Id).HasColumnName("id");
@@ -119,14 +116,43 @@ namespace WpfApp1.Data
 
             modelBuilder.Entity<Project>(entity =>
             {
-                entity.Property(p => p.Id).HasColumnName("id");
-                entity.Property(p => p.Name).HasColumnName("name").HasMaxLength(255);
-                entity.Property(p => p.Details).HasColumnName("details");
-                entity.Property(p => p.Start).HasColumnName("start");
-                entity.Property(p => p.Status).HasColumnName("status")
-                    .HasConversion<string>();
+
+                entity.HasKey(p => p.Id);
+                entity.Property(p => p.Id).HasColumnName("id").ValueGeneratedOnAdd();
                 entity.Property(p => p.ClientId).HasColumnName("client_id");
+                entity.Property(p => p.NumberOfPeople).HasColumnName("number_of_people");
+                entity.Property(p => p.IsSalaryVisible).HasColumnName("is_salary_visible");
+                entity.Property(p => p.ContactFullName).HasColumnName("contact_full_name").HasMaxLength(255);
+                entity.Property(p => p.ContactEmail).HasColumnName("contact_email").HasMaxLength(255);
+                entity.Property(p => p.ContactPhone).HasColumnName("contact_phone").HasMaxLength(255).IsRequired(false);
+                entity.Property(p => p.JobTitle).HasColumnName("job_title").HasMaxLength(255);
+                entity.Property(p => p.Department).HasColumnName("department").HasMaxLength(255);
+                entity.Property(p => p.MainDuties).HasColumnName("main_duties");
+                entity.Property(p => p.AdditionalDuties).HasColumnName("additional_duties").IsRequired(false);
+                entity.Property(p => p.DevelopmentOpportunities).HasColumnName("development_opportunities").IsRequired(false);
+                entity.Property(p => p.PlannedHiringDate).HasColumnName("planned_hiring_date");
+                entity.Property(p => p.PreferredStudyFields).HasColumnName("preferred_study_fields").HasMaxLength(255).IsRequired(false);
+                entity.Property(p => p.AdditionalCertifications).HasColumnName("additional_certifications").HasMaxLength(255).IsRequired(false);
+                entity.Property(p => p.RequiredExperience).HasColumnName("required_experience");
+                entity.Property(p => p.PreferredExperience).HasColumnName("preferred_experience").IsRequired(false);
+                entity.Property(p => p.RequiredSkills).HasColumnName("required_skills");
+                entity.Property(p => p.PreferredSkills).HasColumnName("preferred_skills").IsRequired(false);
+                entity.Property(p => p.RequiredLanguages).HasColumnName("required_languages");
+                entity.Property(p => p.PreferredLanguages).HasColumnName("preferred_languages").IsRequired(false);
+                entity.Property(p => p.GrossSalary).HasColumnName("gross_salary").HasMaxLength(255);
+                entity.Property(p => p.BonusSystem).HasColumnName("bonus_system");
+                entity.Property(p => p.AdditionalBenefits).HasColumnName("additional_benefits").IsRequired(false);
+                entity.Property(p => p.WorkTools).HasColumnName("work_tools").IsRequired(false);
+                entity.Property(p => p.WorkPlace).HasColumnName("work_place").HasMaxLength(255);
+                entity.Property(p => p.WorkingHours).HasColumnName("working_hours").HasMaxLength(255).IsRequired(false);
+                entity.Property(p => p.OtherRemarks).HasColumnName("other_remarks").IsRequired(false);
+
+                entity.HasOne(p => p.Client)
+                      .WithMany(c => c.Projects)
+                      .HasForeignKey(p => p.ClientId)
+                      .HasConstraintName("projects_ibfk_1");
             });
+
 
             modelBuilder.Entity<ProjectEmployee>(entity =>
             {
@@ -148,8 +174,8 @@ namespace WpfApp1.Data
             {
                 entity.Property(m => m.Id).HasColumnName("id");
                 entity.Property(m => m.Title).HasColumnName("title").HasMaxLength(255);
-                entity.Property(m => m.StartTime).HasColumnName("start_time");   // nowa kolumna
-                entity.Property(m => m.EndTime).HasColumnName("end_time");       // nowa kolumna
+                entity.Property(m => m.StartTime).HasColumnName("start_time");
+                entity.Property(m => m.EndTime).HasColumnName("end_time");
             });
 
 
@@ -192,6 +218,8 @@ namespace WpfApp1.Data
                 entity.Property(u => u.Login).HasColumnName("login").HasMaxLength(255);
                 entity.Property(u => u.Password).HasColumnName("password").HasMaxLength(255);
                 entity.Property(u => u.EmployeeId).HasColumnName("employee_id");
+                entity.Property(u => u.ClientId).HasColumnName("client_id");
+                entity.Property(u => u.CandidateId).HasColumnName("candidate_id");
             });
 
             modelBuilder.Entity<Notification>(entity =>
@@ -203,7 +231,7 @@ namespace WpfApp1.Data
                 entity.Property(n => n.Title).HasColumnName("title").HasMaxLength(255);
                 entity.Property(n => n.Message).HasColumnName("message");
                 entity.Property(n => n.FromId).HasColumnName("msg_from");
-                entity.Property(n => n.ToIds).HasColumnName("msg_to");
+                entity.Property(n => n.ToId).HasColumnName("msg_to");
                 entity.Property(n => n.IsRead).HasColumnName("is_read");
             });
 

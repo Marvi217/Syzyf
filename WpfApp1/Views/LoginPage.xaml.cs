@@ -70,5 +70,10 @@ namespace WpfApp1.Views
             var context = App.ServiceProvider.GetRequiredService<SyzyfContext>();
             _mainFrame.Navigate(new HomePage(_mainFrame, user, context));
         }
+        private void RegisterButton_Click(object sender, RoutedEventArgs e)
+        {
+            var context = App.ServiceProvider.GetRequiredService<SyzyfContext>();
+            _mainFrame.Navigate(new RegisterPage(_mainFrame, context));
+        }
     }
 }

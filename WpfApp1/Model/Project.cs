@@ -1,31 +1,58 @@
 ﻿using System;
 using System.Collections.Generic;
-using WpfApp1.Model;
 using WpfApp1.Models;
+using WpfApp1.Model;
 
-public class Project
+namespace WpfApp1.Models
 {
-    public long Id { get; set; }
-    public string Details { get; set; }
-    public string Name { get; set; }
-    public DateTime? Start { get; set; }
-    public ProjectStatus Status { get; set; }
-    public long ClientId { get; set; }
-    public Client Client { get; set; }
-
-    public ICollection<CandidateSelection> CandidateSelections { get; set; }
-    public ICollection<ProjectEmployee> ProjectEmployees { get; set; }
-    public ICollection<ProjectVersion> ProjectVersions { get; set; } = new List<ProjectVersion>();
-    public Project()
+    public class Project
     {
-        CandidateSelections = new HashSet<CandidateSelection>();
-        ProjectEmployees = new HashSet<ProjectEmployee>();
-    }
-}
+        public long Id { get; set; }
+        public long ClientId { get; set; }
+        public int NumberOfPeople { get; set; }
+        public bool IsSalaryVisible { get; set; }
+        public string ContactFullName { get; set; }
+        public string ContactEmail { get; set; }
+        public string ContactPhone { get; set; }
+        public string JobTitle { get; set; }
+        public string Department { get; set; }
+        public string MainDuties { get; set; }
+        public string AdditionalDuties { get; set; }
+        public string DevelopmentOpportunities { get; set; }
+        public DateTime PlannedHiringDate { get; set; }
+        public string PreferredStudyFields { get; set; }
+        public string AdditionalCertifications { get; set; }
+        public string RequiredExperience { get; set; }
+        public string PreferredExperience { get; set; }
+        public string RequiredSkills { get; set; }
+        public string PreferredSkills { get; set; }
+        public string RequiredLanguages { get; set; }
+        public string PreferredLanguages { get; set; }
+        public string GrossSalary { get; set; }
+        public bool BonusSystem { get; set; }
+        public string AdditionalBenefits { get; set; }
+        public string WorkTools { get; set; }
+        public string WorkPlace { get; set; }
+        public string WorkingHours { get; set; }
+        public string OtherRemarks { get; set; }
+        public ProjectStatus Status { get; set; }
 
-public enum ProjectStatus
-{
-    Planned,
-    InProgress,
-    Completed
+        public Client Client { get; set; }
+        public ICollection<CandidateSelection> CandidateSelections { get; set; }
+        public ICollection<ProjectEmployee> ProjectEmployees { get; set; }
+        public ICollection<ProjectVersion> ProjectVersions { get; set; }
+
+        public Project()
+        {
+            CandidateSelections = new HashSet<CandidateSelection>();
+            ProjectEmployees = new HashSet<ProjectEmployee>();
+            ProjectVersions = new List<ProjectVersion>();
+        }
+    }
+    public enum ProjectStatus
+    {
+        Planned,
+        InProgress,
+        Completed
+    }
 }

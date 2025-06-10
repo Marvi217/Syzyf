@@ -10,33 +10,22 @@ namespace WpfApp1.Views
     {
         private Frame _mainFrame;
         private User _user;
-        private readonly SyzyfContext _context;
+        private SyzyfContext _context;
 
         public MenuControl()
         {
-            try
-            {
-                InitializeComponent();
-                _context = App.ServiceProvider.GetRequiredService<SyzyfContext>();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Błąd w MenuControl ctor: {ex.Message}");
-                throw;
-            }
+            InitializeComponent();
         }
-
 
         public void Initialize(Frame mainFrame, User user)
         {
-
             _mainFrame = mainFrame;
             _user = user;
+            _context = App.ServiceProvider.GetRequiredService<SyzyfContext>();
 
             bool isAdmin = _user?.Employee?.PositionId == 1;
             AddEmployeeButton.Visibility = isAdmin ? Visibility.Visible : Visibility.Collapsed;
         }
-
 
         private void AddEmployeeButton_Click(object sender, RoutedEventArgs e)
         {
@@ -45,7 +34,7 @@ namespace WpfApp1.Views
 
         private void ProjectsButton_Click(object sender, RoutedEventArgs e)
         {
-            MessageBox.Show("Projekty kliknięte");
+            _mainFrame?.Navigate(new ProjectPage(_mainFrame, _user, _context));
         }
 
         private void NotificationsButton_Click(object sender, RoutedEventArgs e)

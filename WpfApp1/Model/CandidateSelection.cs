@@ -1,4 +1,6 @@
-﻿namespace WpfApp1.Model
+﻿using WpfApp1.Models;
+
+namespace WpfApp1.Model
 {
     public class CandidateSelection
     {

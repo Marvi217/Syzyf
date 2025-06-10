@@ -11,7 +11,7 @@ namespace WpfApp1.Model
         [Column("id")]
         public long Id { get; set; }
 
-        [Column("title")] // dodaj kolumnę w tabeli lub usuń to pole, jeśli nie potrzebujesz
+        [Column("title")]
         public string Title { get; set; }
 
         [Column("message")]
@@ -21,22 +21,7 @@ namespace WpfApp1.Model
         public long FromId { get; set; }
 
         [Column("msg_to")]
-        public string ToIds { get; set; }  // w bazie jest int, a model string - trzeba ujednolicić
-
-        [NotMapped]
-        public List<long> ToId
-        {
-            get
-            {
-                if (string.IsNullOrEmpty(ToIds))
-                    return new List<long>();
-                return JsonSerializer.Deserialize<List<long>>(ToIds);
-            }
-            set
-            {
-                ToIds = JsonSerializer.Serialize(value);
-            }
-        }
+        public List<long> ToId { get; set; }
 
         [Column("is_read")]
         public bool IsRead { get; set; }

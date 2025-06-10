@@ -1,0 +1,173 @@
+﻿<Page x:Class="WpfApp1.Views.CreateProjectPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      Title="Wyślij kartę projektu"
+      xmlns:local="clr-namespace:WpfApp1.Views" 
+      >
+
+    <Grid>
+        <!-- Menu górne -->
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- TopMenu -->
+        <local:MenuControl x:Name="TopMenu" Grid.Row="0" DockPanel.Dock="Top"/>
+
+        <!-- Główna zawartość -->
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <Grid Margin="30">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <!-- Nagłówek -->
+                <TextBlock Grid.Row="0" 
+                          Text="Wyślij kartę projektu"
+                          FontSize="28"
+                          FontWeight="Bold"
+                          Foreground="#2C3E50"
+                          Margin="0,0,0,30"/>
+
+                <!-- Opis -->
+                <TextBlock Grid.Row="1"
+                          TextWrapping="Wrap"
+                          FontSize="14"
+                          Foreground="#34495E"
+                          Margin="0,0,0,25">
+                    <Run Text="Wprowadź login użytkownika (klienta), do którego chcesz wysłać kartę projektu. "/>
+                    <Run Text="System automatycznie wygeneruje i wyśle profesjonalny komunikat wraz z formularzem do wypełnienia."
+                         FontWeight="SemiBold"/>
+                </TextBlock>
+
+                <!-- Formularz -->
+                <Border Grid.Row="2"
+                       Background="White"
+                       BorderBrush="#BDC3C7"
+                       BorderThickness="1"
+                       CornerRadius="8"
+                       Padding="25"
+                       Margin="0,0,0,20">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <!-- Etykieta -->
+                        <TextBlock Grid.Row="0"
+                                  Text="Login użytkownika (klienta):"
+                                  FontSize="14"
+                                  FontWeight="SemiBold"
+                                  Foreground="#2C3E50"
+                                  Margin="0,0,0,8"/>
+
+                        <!-- Pole tekstowe -->
+                        <TextBox Grid.Row="1"
+                                Name="LoginTextBox"
+                                Text="{Binding Login, UpdateSourceTrigger=PropertyChanged}"
+                                FontSize="14"
+                                Padding="12"
+                                Height="40"
+                                BorderBrush="#95A5A6"
+                                BorderThickness="1"
+                                Background="#FAFAFA">
+                            <TextBox.Style>
+                                <Style TargetType="TextBox">
+                                    <Style.Triggers>
+                                        <Trigger Property="IsFocused" Value="True">
+                                            <Setter Property="BorderBrush" Value="#3498DB"/>
+                                            <Setter Property="Background" Value="White"/>
+                                        </Trigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBox.Style>
+                        </TextBox>
+                    </Grid>
+                </Border>
+
+                <!-- Podgląd wiadomości -->
+                <Expander Grid.Row="3"
+                         Header="Podgląd wiadomości, która zostanie wysłana"
+                         FontSize="14"
+                         FontWeight="SemiBold"
+                         Foreground="#2C3E50"
+                         Margin="0,0,0,20">
+                    <Border Background="#F8F9FA"
+                           BorderBrush="#E9ECEF"
+                           BorderThickness="1"
+                           CornerRadius="5"
+                           Padding="15"
+                           Margin="0,10,0,0">
+                        <TextBlock Text="Dzień dobry,&#x0a;&#x0a;Jestem [Imię Nazwisko] z firmy Syzyf. Zwracam się do Państwa z prośbą o wypełnienie karty projektu, która pozwoli nam lepiej zrozumieć Państwa potrzeby i oczekiwania.&#x0a;&#x0a;Karta projektu zawiera kluczowe informacje niezbędne do prawidłowego zaplanowania i realizacji współpracy. Prosimy o szczegółowe wypełnienie wszystkich sekcji, co umożliwi nam przygotowanie oferty maksymalnie dopasowanej do Państwa wymagań.&#x0a;&#x0a;W przypadku pytań lub wątpliwości dotyczących wypełniania karty, proszę o kontakt pod tym adresem. Jesteśmy do Państwa dyspozycji i chętnie udzielimy wszelkich wyjaśnień.&#x0a;&#x0a;Dziękujemy za zainteresowanie naszymi usługami i wyrażamy nadzieję na owocną współpracę.&#x0a;&#x0a;Z poważaniem,&#x0a;[Imię Nazwisko]&#x0a;Firma Syzyf"
+                                  TextWrapping="Wrap"
+                                  FontSize="12"
+                                  Foreground="#495057"
+                                  LineHeight="18"/>
+                    </Border>
+                </Expander>
+
+                <!-- Spacer -->
+                <Grid Grid.Row="4"/>
+
+                <!-- Przyciski -->
+                <StackPanel Grid.Row="5"
+                           Orientation="Horizontal"
+                           HorizontalAlignment="Right"
+                           Margin="0,20,0,0">
+
+                    <Button Name="CancelButton"
+                           Content="Anuluj"
+                           Click="Cancel_Click"
+                           Width="100"
+                           Height="40"
+                           Margin="0,0,15,0"
+                           Background="#95A5A6"
+                           Foreground="White"
+                           FontSize="14"
+                           FontWeight="SemiBold"
+                           BorderThickness="0"
+                           Cursor="Hand">
+                        <Button.Style>
+                            <Style TargetType="Button">
+                                <Style.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter Property="Background" Value="#7F8C8D"/>
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                    </Button>
+
+                    <Button Name="SendButton"
+                           Content="Wyślij kartę"
+                           Click="SendProjectCard_Click"
+                           Width="130"
+                           Height="40"
+                           Background="#27AE60"
+                           Foreground="White"
+                           FontSize="14"
+                           FontWeight="SemiBold"
+                           BorderThickness="0"
+                           Cursor="Hand">
+                        <Button.Style>
+                            <Style TargetType="Button">
+                                <Style.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter Property="Background" Value="#229954"/>
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </ScrollViewer>
+    </Grid>
+</Page>

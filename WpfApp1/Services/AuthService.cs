@@ -18,6 +18,9 @@ namespace WpfApp1.Services
         {
             return _context.Users
                 .Include(u => u.Employee)
+                .Include(u => u.Client)
+                .Include(u => u.Candidate)
+                .AsNoTracking()
                 .FirstOrDefault(u => u.Login == login && u.Password == password);
         }
     }

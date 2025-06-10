@@ -5,6 +5,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using WpfApp1.Data;
@@ -30,12 +31,9 @@ namespace WpfApp1.Views
                 {
                     _selectedNotification = value;
                     OnPropertyChanged();
-
                     if (_selectedNotification != null && !_selectedNotification.IsRead)
                     {
-                        _selectedNotification.IsRead = true;
-                        OnPropertyChanged(nameof(Notifications));
-                        OnPropertyChanged(nameof(SelectedNotification));
+                        _ = MarkAsReadAsync(_selectedNotification);
                     }
                 }
             }
@@ -47,35 +45,116 @@ namespace WpfApp1.Views
             _mainFrame = mainFrame;
             _user = user;
             _context = context;
+
+            Notifications = new ObservableCollection<Notification>();
             TopMenu.Initialize(_mainFrame, _user);
-            LoadNotifications();
             DataContext = this;
-        }
-        private async void LoadNotifications()
-        {
-            long employeeId = _user.EmployeeId ?? 0;
 
-            var notifications = await _context.Notifications.ToListAsync();
-
-            var filtered = notifications.Where(n => n.ToId.Contains(employeeId)).ToList();
-
-            Notifications = new ObservableCollection<Notification>(filtered);
-            OnPropertyChanged(nameof(Notifications));
+            _ = LoadNotificationsAsync();
         }
 
-
-        private void Expander_Expanded(object sender, RoutedEventArgs e)
+        private async Task LoadNotificationsAsync()
         {
-            if (sender is Expander expander && expander.DataContext is Notification notif && !notif.IsRead)
+            try
             {
-                notif.IsRead = true;
+                long userId = _user.Id;
+
+                var allNotifications = await _context.Notifications
+                    .OrderByDescending(n => n.Id)
+                    .ToListAsync();
+
+                var userNotifications = allNotifications
+                    .Where(n => n.ToId != null && n.ToId.Contains(userId))
+                    .ToList();
+
+                Notifications.Clear();
+                foreach (var notif in userNotifications)
+                {
+                    Notifications.Add(notif);
+                }
+
                 OnPropertyChanged(nameof(Notifications));
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Błąd podczas ładowania powiadomień: {ex.Message}", "Błąd", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
+        private async Task MarkAsReadAsync(Notification notification)
+        {
+            try
+            {
+                if (!notification.IsRead)
+                {
+                    notification.IsRead = true;
+                    _context.Notifications.Update(notification);
+                    await _context.SaveChangesAsync();
+
+                    OnPropertyChanged(nameof(Notifications));
+                    OnPropertyChanged(nameof(SelectedNotification));
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Błąd podczas oznaczania jako przeczytane: {ex.Message}", "Błąd", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private async void Expander_Expanded(object sender, RoutedEventArgs e)
+        {
+            if (sender is Expander exp && exp.DataContext is Notification notif && !notif.IsRead)
+            {
+                await MarkAsReadAsync(notif);
+            }
+        }
+
+        private void FillProjectCard_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button btn && btn.DataContext is Notification notif)
+            {
+                _mainFrame.Navigate(new ProjectCardFormPage(_mainFrame, _user, _context, notif));
+            }
+        }
+
+        private async void MarkAsRead_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button btn && btn.CommandParameter is Notification notif)
+            {
+                await MarkAsReadAsync(notif);
+            }
+        }
+
+        private async void MarkAllAsRead_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                var unread = Notifications.Where(n => !n.IsRead).ToList();
+                foreach (var n in unread)
+                {
+                    n.IsRead = true;
+                    _context.Notifications.Update(n);
+                }
+
+                if (unread.Any())
+                {
+                    await _context.SaveChangesAsync();
+                    OnPropertyChanged(nameof(Notifications));
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Błąd przy oznaczaniu wszystkich jako przeczytane: {ex.Message}", "Błąd", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private async void RefreshNotifications_Click(object sender, RoutedEventArgs e)
+        {
+            await LoadNotificationsAsync();
+        }
 
         public event PropertyChangedEventHandler PropertyChanged;
-        private void OnPropertyChanged([CallerMemberName] string propertyName = null)
-            => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        private void OnPropertyChanged([CallerMemberName] string name = null)
+            => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
     }
 }

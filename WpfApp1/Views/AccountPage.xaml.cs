@@ -19,7 +19,7 @@ namespace WpfApp1.Views
             _mainFrame = mainFrame;
             _user = user;
             _context = context;
-
+            TopMenu.Initialize(_mainFrame, _user);
             ShowProfile();
         }
 
@@ -34,16 +34,45 @@ namespace WpfApp1.Views
 
         private void ShowProfile()
         {
-            var employee = _user.Employee;
-
             var content = new StackPanel { Margin = new Thickness(10) };
-            content.Children.Add(new TextBlock { Text = $"Imię: {employee?.FirstName}", FontSize = 16 });
-            content.Children.Add(new TextBlock { Text = $"Nazwisko: {employee?.LastName}", FontSize = 16 });
-            content.Children.Add(new TextBlock { Text = $"Telefon: {employee?.PhoneNumber}", FontSize = 16 });
-            content.Children.Add(new TextBlock { Text = $"Email: {employee?.Email}", FontSize = 16 });
+
+            if (_user.Employee != null)
+            {
+                var employee = _user.Employee;
+                content.Children.Add(new TextBlock { Text = $"Imię: {employee.FirstName}", FontSize = 16 });
+                content.Children.Add(new TextBlock { Text = $"Nazwisko: {employee.LastName}", FontSize = 16 });
+                content.Children.Add(new TextBlock { Text = $"Telefon: {employee.PhoneNumber}", FontSize = 16 });
+                content.Children.Add(new TextBlock { Text = $"Email: {employee.Email}", FontSize = 16 });
+            }
+            else if (_user.Client != null)
+            {
+                var client = _user.Client;
+                content.Children.Add(new TextBlock { Text = $"Firma: {client.Company}", FontSize = 16 });
+                content.Children.Add(new TextBlock { Text = $"NIP: {client.Nip}", FontSize = 16 });
+                content.Children.Add(new TextBlock { Text = $"Adres: {client.Address}", FontSize = 16 });
+                content.Children.Add(new TextBlock { Text = $"Email kontaktowy: {client.ContactEmail}", FontSize = 16 });
+                content.Children.Add(new TextBlock { Text = $"Telefon kontaktowy: {client.ContactNumber}", FontSize = 16 });
+                content.Children.Add(new TextBlock { Text = $"Email osoby kontaktowej: {client.ContactPersonEmail}", FontSize = 16 });
+                content.Children.Add(new TextBlock { Text = $"Telefon osoby kontaktowej: {client.ContactPersonNumber}", FontSize = 16 });
+            }
+            else if (_user.Candidate != null)
+            {
+                var candidate = _user.Candidate;
+                content.Children.Add(new TextBlock { Text = $"Imię: {candidate.FirstName}", FontSize = 16 });
+                content.Children.Add(new TextBlock { Text = $"Nazwisko: {candidate.LastName}", FontSize = 16 });
+                content.Children.Add(new TextBlock { Text = $"Adres: {candidate.Address}", FontSize = 16 });
+                content.Children.Add(new TextBlock { Text = $"Email: {candidate.Email}", FontSize = 16 });
+                content.Children.Add(new TextBlock { Text = $"Telefon: {candidate.PhoneNumber}", FontSize = 16 });
+                content.Children.Add(new TextBlock { Text = $"Stanowiska: {candidate.Positions}", FontSize = 16 });
+            }
+            else
+            {
+                content.Children.Add(new TextBlock { Text = "Brak powiązanego profilu.", FontSize = 16, Foreground = Brushes.Red });
+            }
 
             ContentArea.Content = content;
         }
+
 
         private void ShowAccount()
         {

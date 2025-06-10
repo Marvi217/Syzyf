@@ -2,11 +2,11 @@
       xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:local="clr-namespace:WpfApp1.Views"
-
+      xmlns:conv="clr-namespace:WpfApp1.Converters"
       Title="Powiadomienia">
 
     <Page.Resources>
-        <!-- Style Expander, żeby mieć efekt hover i ładne zaokrąglenia -->
+        <!-- Style Expander -->
         <Style TargetType="Expander">
             <Setter Property="Margin" Value="0,0,0,10"/>
             <Setter Property="Background" Value="White"/>
@@ -48,7 +48,11 @@
                 </Setter.Value>
             </Setter>
         </Style>
+
+        <!-- Konwerter do widoczności przycisku -->
+        <conv:ProjectCardVisibilityConverter x:Key="ProjectCardVisibilityConverter"/>
     </Page.Resources>
+
     <DockPanel LastChildFill="True">
         <local:MenuControl x:Name="TopMenu" DockPanel.Dock="Top"/>
 
@@ -57,7 +61,14 @@
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
                         <Expander Header="{Binding Title}" Expanded="Expander_Expanded">
-                            <TextBlock Text="{Binding Message}" TextWrapping="Wrap" Margin="10,5,0,0"/>
+                            <StackPanel>
+                                <TextBlock Text="{Binding Message}" TextWrapping="Wrap" Margin="10,5,0,0"/>
+                                <Button Content="Wypełnij"
+                                        Click="FillProjectCard_Click"
+                                        Visibility="{Binding Title, Converter={StaticResource ProjectCardVisibilityConverter}}"
+                                        HorizontalAlignment="Right"
+                                        Margin="0,10,0,0"/>
+                            </StackPanel>
                         </Expander>
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
