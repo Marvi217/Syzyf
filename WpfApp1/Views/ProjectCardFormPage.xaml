@@ -1,0 +1,126 @@
+﻿<Page x:Class="WpfApp1.Views.ProjectCardFormPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:local="clr-namespace:WpfApp1.Views"
+      Title="Karta Projektu">
+
+    <DockPanel LastChildFill="True">
+        <local:MenuControl x:Name="TopMenu" DockPanel.Dock="Top" />
+
+        <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="20">
+            <StackPanel Width="700">
+
+                <!-- Sekcja 1 -->
+                <TextBlock Text="1. Informacje o ofercie" FontWeight="Bold" FontSize="16" Margin="0,10,0,5"/>
+
+                <TextBox x:Name="NumberOfPeopleBox" Margin="0,0,0,10" Text="Liczba osób *" GotFocus="HintBox_GotFocus" LostFocus="HintBox_LostFocus"/>
+
+                <TextBlock Text="Czy wynagrodzenie ma być widoczne? *"/>
+                <StackPanel  x:Name="SalaryVisibilityPanel" Orientation="Horizontal" Margin="0,0,0,10">
+                    <CheckBox Content="Tak"/>
+                    <CheckBox Content="Nie"/>
+                </StackPanel>
+
+                <!-- Sekcja 2 -->
+                <TextBlock Text="2. Informacje o stanowisku" FontWeight="Bold" FontSize="16" Margin="0,20,0,5"/>
+
+                <TextBox x:Name="JobTitleBox" Margin="0,0,0,10" Text="Nazwa stanowiska *" GotFocus="HintBox_GotFocus" LostFocus="HintBox_LostFocus"/>
+
+                <TextBlock Text="Poziom stanowiska *"/>
+                <StackPanel x:Name="JobLevelsPanel" Orientation="Vertical" Margin="0,5,0,10">
+                    <CheckBox Content="Praktykant/ka"/>
+                    <CheckBox Content="Asystent/ka"/>
+                    <CheckBox Content="Specjalista/ka"/>
+                    <CheckBox Content="Starszy Specjalista/ka"/>
+                    <CheckBox Content="Kierownik"/>
+                    <CheckBox Content="Dyrektor"/>
+                    <CheckBox Content="Prezes"/>
+                </StackPanel>
+
+                <TextBox x:Name="DepartmentBox" Margin="0,0,0,10" Text="Dział *" GotFocus="HintBox_GotFocus" LostFocus="HintBox_LostFocus"/>
+
+                <!-- Zakres obowiązków -->
+                <TextBlock Text="Zakres Obowiązków" FontWeight="Bold" FontSize="16" Margin="0,20,0,5"/>
+
+                <TextBox x:Name="MainDutiesBox" Margin="0,0,0,10" Text="Główne obowiązki *" AcceptsReturn="True" Height="60" GotFocus="HintBox_GotFocus" LostFocus="HintBox_LostFocus"/>
+                <TextBox x:Name="AdditionalDutiesBox" Margin="0,0,0,10" Text="Dodatkowe obowiązki" AcceptsReturn="True" Height="60" GotFocus="HintBox_GotFocus" LostFocus="HintBox_LostFocus"/>
+
+                <!-- Planowana data -->
+                <TextBlock Text="Planowana data zatrudnienia *" FontWeight="Bold" FontSize="16" Margin="0,20,0,5"/>
+                <DatePicker x:Name="PlannedHiringDatePicker" Margin="0,0,0,10"/>
+
+                <!-- Sekcja 3 -->
+                <TextBlock Text="3. Wymagania dotyczące kandydata" FontWeight="Bold" FontSize="16" Margin="0,20,0,5"/>
+
+                <TextBlock Text="Wykształcenie *"/>
+                <StackPanel x:Name="EducationPanel" Orientation="Vertical" Margin="0,5,0,10">
+                    <CheckBox Content="Podstawowe"/>
+                    <CheckBox Content="Zawodowe"/>
+                    <CheckBox Content="Średnie"/>
+                    <CheckBox Content="Licencjat/Inżynier"/>
+                    <CheckBox Content="Magisterskie"/>
+                    <CheckBox Content="Doktor"/>
+                    <CheckBox Content="Profesor"/>
+                </StackPanel>
+
+                <TextBox x:Name="PreferredStudyFieldsBox" Margin="0,0,0,10" Text="Preferowane kierunki studiów" GotFocus="HintBox_GotFocus" LostFocus="HintBox_LostFocus"/>
+                <TextBox x:Name="AdditionalCertificationsBox" Margin="0,0,0,10" Text="Dodatkowe uprawnienia" GotFocus="HintBox_GotFocus" LostFocus="HintBox_LostFocus"/>
+
+                <TextBlock Text="Doświadczenie" FontWeight="Bold" FontSize="16" Margin="0,20,0,5"/>
+                <TextBox x:Name="RequiredExperienceBox" Margin="0,0,0,10" Text="Wymagane doświadczenie *" GotFocus="HintBox_GotFocus" LostFocus="HintBox_LostFocus"/>
+                <TextBox x:Name="PreferredExperienceBox" Margin="0,0,0,10" Text="Mile widziane doświadczenie" GotFocus="HintBox_GotFocus" LostFocus="HintBox_LostFocus"/>
+
+                <TextBlock Text="Umiejętności" FontWeight="Bold" FontSize="16" Margin="0,20,0,5"/>
+                <TextBox x:Name="RequiredSkillsBox" Margin="0,0,0,10" Text="Wymagane umiejętności *" AcceptsReturn="True" Height="40" GotFocus="HintBox_GotFocus" LostFocus="HintBox_LostFocus"/>
+                <TextBox x:Name="PreferredSkillsBox" Margin="0,0,0,10" Text="Mile widziane umiejętności" AcceptsReturn="True" Height="40" GotFocus="HintBox_GotFocus" LostFocus="HintBox_LostFocus"/>
+
+                <TextBlock Text="Języki obce" FontWeight="Bold" FontSize="16" Margin="0,20,0,5"/>
+                <TextBox x:Name="RequiredLanguagesBox" Margin="0,0,0,10" Text="Wymagane języki *" GotFocus="HintBox_GotFocus" LostFocus="HintBox_LostFocus"/>
+                <TextBox x:Name="PreferredLanguagesBox" Margin="0,0,0,10" Text="Mile widziane języki" GotFocus="HintBox_GotFocus" LostFocus="HintBox_LostFocus"/>
+
+                <!-- Sekcja 4 -->
+                <TextBlock Text="4. Warunki pracy" FontWeight="Bold" FontSize="16" Margin="0,20,0,5"/>
+
+                <TextBlock Text="Forma zatrudnienia *"/>
+                <StackPanel x:Name="EmploymentFormsPanel" Orientation="Vertical" Margin="0,5,0,10">
+                    <CheckBox Content="Umowa o pracę"/>
+                    <CheckBox Content="Umowa zlecenie"/>
+                    <CheckBox Content="Umowa o dzieło"/>
+                    <CheckBox Content="B2B / Kontrakt"/>
+                    <CheckBox Content="Staż / praktyka"/>
+                </StackPanel>
+
+                <TextBox x:Name="GrossSalaryBox" Margin="0,0,0,10" Text="Wynagrodzenie brutto *" GotFocus="HintBox_GotFocus" LostFocus="HintBox_LostFocus"/>
+
+                <TextBlock Text="System premiowy *"/>
+                <StackPanel x:Name="BonusPanel" Orientation="Horizontal" Margin="0,0,0,10">
+                    <CheckBox Content="Tak"/>
+                    <CheckBox Content="Nie" Margin="20,0,0,0"/>
+                </StackPanel>
+
+                <TextBox x:Name="AdditionalBenefitsBox" Margin="0,0,0,10" Text="Dodatkowe benefity" GotFocus="HintBox_GotFocus" LostFocus="HintBox_LostFocus"/>
+                <TextBox x:Name="WorkToolsBox" Margin="0,0,0,10" Text="Narzędzia pracy" GotFocus="HintBox_GotFocus" LostFocus="HintBox_LostFocus"/>
+                <TextBox x:Name="WorkPlaceBox" Margin="0,0,0,10" Text="Miejsce pracy *" GotFocus="HintBox_GotFocus" LostFocus="HintBox_LostFocus"/>
+                <TextBox x:Name="WorkingHoursBox" Margin="0,0,0,10" Text="Godziny pracy *" GotFocus="HintBox_GotFocus" LostFocus="HintBox_LostFocus"/>
+
+                <TextBlock Text="Tryb pracy"/>
+                <StackPanel x:Name="WorkModesPanel" Orientation="Vertical" Margin="0,5,0,10">
+                    <CheckBox Content="Stacjonarna"/>
+                    <CheckBox Content="Zdalna"/>
+                    <CheckBox Content="Hybrydowa"/>
+                    <CheckBox Content="Mobilna"/>
+                </StackPanel>
+
+                <!-- Sekcja 5 -->
+                <TextBlock Text="5. Inne uwagi" FontWeight="Bold" FontSize="16" Margin="0,20,0,5"/>
+                <TextBox x:Name="OtherRemarksBox" AcceptsReturn="True" Height="60" Margin="0,0,0,10" Text="Pozostałe informacje" GotFocus="HintBox_GotFocus" LostFocus="HintBox_LostFocus"/>
+
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,30,0,0">
+                    <Button Content="Zapisz" Width="120" Margin="0,0,10,0" Click="SaveProject_Click"/>
+                    <Button Content="Anuluj" Width="120" Click="Cancel_Click"/>
+                </StackPanel>
+
+            </StackPanel>
+        </ScrollViewer>
+    </DockPanel>
+</Page>

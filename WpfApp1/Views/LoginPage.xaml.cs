@@ -1,17 +1,23 @@
-﻿using System.Windows;
+﻿using Microsoft.Extensions.DependencyInjection;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using WpfApp1.Data;
+using WpfApp1.Model;
+using WpfApp1.Services;
 
 namespace WpfApp1.Views
 {
     public partial class LoginPage : Page
     {
-        private Frame _mainFrame;
+        private readonly Frame _mainFrame;
+        private readonly AuthService _authService;
 
-        public LoginPage(Frame mainFrame)
+        public LoginPage(Frame mainFrame, AuthService authService)
         {
             InitializeComponent();
             _mainFrame = mainFrame;
+            _authService = authService;
         }
 
         private void LoginTextBox_GotFocus(object sender, RoutedEventArgs e)
@@ -41,19 +47,33 @@ namespace WpfApp1.Views
 
         private void LoginButton_Click(object sender, RoutedEventArgs e)
         {
-            string login = LoginTextBox.Text;
-            string password = PasswordBox.Password;
+            var login = LoginTextBox.Text.Trim();
+            var password = PasswordBox.Password;
 
-            if ((login == "admin" || login == "user") && password == "123")
+            if (string.IsNullOrWhiteSpace(login) || string.IsNullOrWhiteSpace(password) || login == "Login")
             {
-                ErrorMessage.Text = "";
-                bool isAdmin = login == "admin";
-                _mainFrame.Navigate(new HomePage(_mainFrame, isAdmin));
+                ErrorMessage.Text = "Wprowadź login i hasło.";
+                return;
             }
-            else
+
+            var user = _authService.Authenticate(login, password);
+
+            if (user == null)
             {
+                ErrorMessage.Foreground = Brushes.Red;
                 ErrorMessage.Text = "Nieprawidłowy login lub hasło.";
+                return;
             }
+
+            ErrorMessage.Foreground = Brushes.Green;
+            ErrorMessage.Text = "Zalogowano pomyślnie.";
+            var context = App.ServiceProvider.GetRequiredService<SyzyfContext>();
+            _mainFrame.Navigate(new HomePage(_mainFrame, user, context));
+        }
+        private void RegisterButton_Click(object sender, RoutedEventArgs e)
+        {
+            var context = App.ServiceProvider.GetRequiredService<SyzyfContext>();
+            _mainFrame.Navigate(new RegisterPage(_mainFrame, context));
         }
     }
 }
