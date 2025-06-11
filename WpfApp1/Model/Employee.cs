@@ -20,7 +20,6 @@ namespace WpfApp1.Model
         public ICollection<ProjectVersion> ProjectVersions { get; set; } = new List<ProjectVersion>();
         public ICollection<ProjectEmployee> ProjectEmployees { get; set; } = new List<ProjectEmployee>();
 
-        // Relacja 1:1 z User
         public User User { get; set; }
     }
 }

@@ -5,12 +5,12 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using WpfApp1.Data;
 using WpfApp1.Model;
 using WpfApp1.Models;
-
 
 namespace WpfApp1.Views
 {
@@ -50,11 +50,27 @@ namespace WpfApp1.Views
             Projects = new ObservableCollection<Project>();
             FilteredProjects = new ObservableCollection<Project>();
 
-            LoadProjects();
+            this.Loaded += ProjectPage_Loaded;
+
             DataContext = this;
         }
 
-        private async void LoadProjects()
+        private async void ProjectPage_Loaded(object sender, RoutedEventArgs e)
+        {
+            if (_user.EmployeeId == null)
+            {
+                MyProjectsButton.Visibility = Visibility.Collapsed;
+                NewProjectButton.Visibility = Visibility.Collapsed;
+            }
+            else if (_user.Employee.Position.PositionName == "Wsparcie")
+            {
+                NewProjectButton.Visibility = Visibility.Collapsed;
+            }
+
+            await LoadProjectsAsync();
+        }
+
+        private async Task LoadProjectsAsync()
         {
             try
             {
@@ -71,7 +87,6 @@ namespace WpfApp1.Views
                 }
 
                 ApplyFilter();
-                OnPropertyChanged(nameof(Projects));
             }
             catch (Exception ex)
             {
@@ -97,12 +112,9 @@ namespace WpfApp1.Views
                     filtered = Projects.Where(p => p.Status == ProjectStatus.Completed);
                     break;
                 case "My":
+                default:
                     long employeeId = _user.EmployeeId ?? 0;
                     filtered = Projects.Where(p => p.ProjectEmployees.Any(pe => pe.EmployeeId == employeeId));
-                    break;
-                case "All":
-                default:
-                    filtered = Projects;
                     break;
             }
 
@@ -110,14 +122,6 @@ namespace WpfApp1.Views
             {
                 FilteredProjects.Add(project);
             }
-
-            OnPropertyChanged(nameof(FilteredProjects));
-        }
-
-        private void FilterAll_Click(object sender, RoutedEventArgs e)
-        {
-            _currentFilter = "All";
-            ApplyFilter();
         }
 
         private void FilterPlanned_Click(object sender, RoutedEventArgs e)
@@ -150,7 +154,6 @@ namespace WpfApp1.Views
             _mainFrame.Navigate(createProjectPage);
         }
 
-
         private void Expander_Expanded(object sender, RoutedEventArgs e)
         {
             if (sender is Expander expander && expander.DataContext is Project project)
@@ -171,34 +174,6 @@ namespace WpfApp1.Views
                 catch (Exception ex)
                 {
                     MessageBox.Show($"Nie można otworzyć szczegółów projektu: {ex.Message}",
-                                   "Błąd", MessageBoxButton.OK, MessageBoxImage.Error);
-                }
-            }
-        }
-
-        private void EditProject_Click(object sender, RoutedEventArgs e)
-        {
-            if (sender is Button button && button.CommandParameter is Project project)
-            {
-                try
-                {
-                    long employeeId = _user.EmployeeId ?? 0;
-                    bool isAssignedToProject = project.ProjectEmployees.Any(pe => pe.EmployeeId == employeeId);
-
-                    if (isAssignedToProject || _user.Employee.Position.PositionName == "Admin")
-                    {
-                        var editPage = new EditProjectPage(_mainFrame, _user, _context, project);
-                        _mainFrame.Navigate(editPage);
-                    }
-                    else
-                    {
-                        MessageBox.Show("Nie masz uprawnień do edycji tego projektu.",
-                                       "Brak uprawnień", MessageBoxButton.OK, MessageBoxImage.Warning);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show($"Nie można otworzyć edycji projektu: {ex.Message}",
                                    "Błąd", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }

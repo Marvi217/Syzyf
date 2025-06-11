@@ -14,6 +14,7 @@ namespace WpfApp1.Data
         public DbSet<Employee> Employees { get; set; }
         public DbSet<Position> Positions { get; set; }
         public DbSet<Project> Projects { get; set; }
+        public DbSet<ProjectCard> ProjectCards { get; set; }
         public DbSet<ProjectEmployee> ProjectEmployees { get; set; }
         public DbSet<ProjectVersion> ProjectVersions { get; set; }
         public DbSet<RecruitmentMeeting> RecruitmentMeetings { get; set; }
@@ -34,6 +35,7 @@ namespace WpfApp1.Data
             modelBuilder.Entity<Employee>().ToTable("employees");
             modelBuilder.Entity<Position>().ToTable("positions");
             modelBuilder.Entity<Project>().ToTable("projects");
+            modelBuilder.Entity<ProjectCard>().ToTable("project_cards");
             modelBuilder.Entity<ProjectEmployee>().ToTable("projects-employees");
             modelBuilder.Entity<ProjectVersion>().ToTable("projectversions");
             modelBuilder.Entity<RecruitmentMeeting>().ToTable("recruitmentmeetings");
@@ -50,6 +52,7 @@ namespace WpfApp1.Data
             modelBuilder.Entity<Employee>().HasKey(e => e.Id);
             modelBuilder.Entity<Position>().HasKey(p => p.Id);
             modelBuilder.Entity<Project>().HasKey(p => p.Id);
+            modelBuilder.Entity<ProjectCard>().HasKey(pc => pc.Id);
             modelBuilder.Entity<ProjectEmployee>().HasKey(pe => pe.Id);
             modelBuilder.Entity<ProjectVersion>().HasKey(pv => pv.Id);
             modelBuilder.Entity<RecruitmentMeeting>().HasKey(rm => rm.Id);
@@ -110,7 +113,6 @@ namespace WpfApp1.Data
 
             modelBuilder.Entity<Project>(entity =>
             {
-
                 entity.HasKey(p => p.Id);
                 entity.Property(p => p.Id).HasColumnName("id").ValueGeneratedOnAdd();
                 entity.Property(p => p.ClientId).HasColumnName("client_id");
@@ -142,11 +144,56 @@ namespace WpfApp1.Data
                 entity.Property(p => p.WorkingHours).HasColumnName("working_hours").HasMaxLength(255).IsRequired(false);
                 entity.Property(p => p.OtherRemarks).HasColumnName("other_remarks").IsRequired(false);
 
+                entity.Property(p => p.Status)
+                      .HasColumnName("status")
+                      .HasConversion(
+                          v => v.ToString(),
+                          v => string.IsNullOrEmpty(v) ? ProjectStatus.Planned : (ProjectStatus)Enum.Parse(typeof(ProjectStatus), v));
+
                 entity.HasOne(p => p.Client)
                       .WithMany(c => c.Projects)
                       .HasForeignKey(p => p.ClientId)
                       .HasConstraintName("projects_ibfk_1");
             });
+
+            modelBuilder.Entity<ProjectCard>(entity =>
+            {
+                entity.Property(pc => pc.Id).HasColumnName("id");
+                entity.Property(pc => pc.ClientId).HasColumnName("client_id");
+                entity.Property(pc => pc.NumberOfPeople).HasColumnName("number_of_people");
+                entity.Property(pc => pc.IsSalaryVisible).HasColumnName("is_salary_visible");
+                entity.Property(pc => pc.JobTitle).HasColumnName("job_title").HasMaxLength(255);
+                entity.Property(pc => pc.JobLevels).HasColumnName("job_levels");
+                entity.Property(pc => pc.Department).HasColumnName("department").HasMaxLength(255);
+                entity.Property(pc => pc.MainDuties).HasColumnName("main_duties");
+                entity.Property(pc => pc.AdditionalDuties).HasColumnName("additional_duties").IsRequired(false);
+                entity.Property(pc => pc.DevelopmentOpportunities).HasColumnName("development_opportunities").IsRequired(false);
+                entity.Property(pc => pc.PlannedHiringDate).HasColumnName("planned_hiring_date");
+                entity.Property(pc => pc.Education).HasColumnName("education").HasMaxLength(255);
+                entity.Property(pc => pc.PreferredStudyFields).HasColumnName("preferred_study_fields").HasMaxLength(255).IsRequired(false);
+                entity.Property(pc => pc.AdditionalCertifications).HasColumnName("additional_certifications").HasMaxLength(255).IsRequired(false);
+                entity.Property(pc => pc.RequiredExperience).HasColumnName("required_experience");
+                entity.Property(pc => pc.PreferredExperience).HasColumnName("preferred_experience").IsRequired(false);
+                entity.Property(pc => pc.RequiredSkills).HasColumnName("required_skills");
+                entity.Property(pc => pc.PreferredSkills).HasColumnName("preferred_skills").IsRequired(false);
+                entity.Property(pc => pc.RequiredLanguages).HasColumnName("required_languages");
+                entity.Property(pc => pc.PreferredLanguages).HasColumnName("preferred_languages").IsRequired(false);
+                entity.Property(pc => pc.EmploymentsForms).HasColumnName("employment_forms").HasMaxLength(255).IsRequired(false);
+                entity.Property(pc => pc.GrossSalary).HasColumnName("gross_salary").HasMaxLength(255);
+                entity.Property(pc => pc.BonusSystem).HasColumnName("bonus_system");
+                entity.Property(pc => pc.AdditionalBenefits).HasColumnName("additional_benefits").IsRequired(false);
+                entity.Property(pc => pc.WorkTools).HasColumnName("work_tools").IsRequired(false);
+                entity.Property(pc => pc.WorkPlace).HasColumnName("work_place").HasMaxLength(255);
+                entity.Property(pc => pc.WorkModes).HasColumnName("work_modes").HasMaxLength(255).IsRequired(false);
+                entity.Property(pc => pc.WorkingHours).HasColumnName("working_hours").HasMaxLength(255).IsRequired(false);
+                entity.Property(pc => pc.OtherRemarks).HasColumnName("other_remarks").IsRequired(false);
+                entity.Property(pc => pc.IsAcceptedBySales).HasColumnName("is_accepted_by_sales");
+                entity.Property(pc => pc.IsAcceptedBySupport).HasColumnName("is_accepted_by_support").HasDefaultValue(false);
+                entity.HasOne(pc => pc.Client)
+                      .WithMany(c => c.ProjectCards)
+                      .HasForeignKey(pc => pc.ClientId)
+                      .HasConstraintName("project_cards_ibfk_1");
+        });
 
 
             modelBuilder.Entity<ProjectEmployee>(entity =>
@@ -223,6 +270,8 @@ namespace WpfApp1.Data
                 entity.HasKey(n => n.Id);
 
                 entity.Property(n => n.Id).HasColumnName("id");
+                entity.Property(n => n.ProjectCardId).HasColumnName("project_card_id");
+                entity.Property(n => n.ProjectId).HasColumnName("project_id");
                 entity.Property(n => n.Title).HasColumnName("title").HasMaxLength(255);
                 entity.Property(n => n.Tag).HasColumnName("tag").HasMaxLength(50);
                 entity.Property(n => n.Message).HasColumnName("message");
@@ -230,6 +279,13 @@ namespace WpfApp1.Data
                 entity.Property(n => n.ToId).HasColumnName("msg_to");
                 entity.Property(n => n.IsRead).HasColumnName("is_read");
             });
+
+            modelBuilder.Entity<Notification>()
+                .HasOne(n => n.ProjectCard)
+                .WithMany()
+                .HasForeignKey(n => n.ProjectCardId)
+                .HasConstraintName("notification_ibfk_1");
+
 
 
             modelBuilder.Entity<MeetingParticipant>()

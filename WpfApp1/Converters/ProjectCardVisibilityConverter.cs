@@ -13,8 +13,9 @@ namespace WpfApp1.Converters
             var expected = parameter as string;
 
             return string.Equals(tag, expected, StringComparison.OrdinalIgnoreCase)
-                ? Visibility.Collapsed
-                : Visibility.Visible;
+                ? Visibility.Visible
+                : Visibility.Collapsed;
+
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)

@@ -1,16 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 using WpfApp1.Models;
-using WpfApp1.Model;
 
-namespace WpfApp1.Models
+namespace WpfApp1.Model
 {
-    public class Project : IProjectBase
+    public class ProjectCard : IProjectBase
     {
         public long Id { get; set; }
         public long ClientId { get; set; }
-        public int NumberOfPeople { get; set; }
-
+        public int NumberOfPeople { get; set; } 
         public string JobLevels { get; set; }
         public bool IsSalaryVisible { get; set; }
         public string JobTitle { get; set; }
@@ -37,24 +38,8 @@ namespace WpfApp1.Models
         public string WorkModes { get; set; }
         public string WorkingHours { get; set; }
         public string OtherRemarks { get; set; }
-        public ProjectStatus Status { get; set; }
-
+        public bool IsAcceptedBySales { get; set; }
+        public bool IsAcceptedBySupport { get; set; }
         public Client Client { get; set; }
-        public ICollection<CandidateSelection> CandidateSelections { get; set; }
-        public ICollection<ProjectEmployee> ProjectEmployees { get; set; }
-        public ICollection<ProjectVersion> ProjectVersions { get; set; }
-
-        public Project()
-        {
-            CandidateSelections = new HashSet<CandidateSelection>();
-            ProjectEmployees = new HashSet<ProjectEmployee>();
-            ProjectVersions = new List<ProjectVersion>();
-        }
-    }
-    public enum ProjectStatus
-    {
-        Planned,
-        InProgress,
-        Completed
     }
 }

@@ -58,17 +58,62 @@ namespace WpfApp1.Views
             try
             {
                 long userId = _user.Id;
+                bool isSupportUser = false;
+                if (_user.EmployeeId != null)
+                {
+                    isSupportUser = _user.Employee.Position.PositionName == "Wsparcie";
+                }
 
-                var allNotifications = await _context.Notifications
-                    .OrderByDescending(n => n.Id)
-                    .ToListAsync();
 
-                var userNotifications = allNotifications
-                    .Where(n => n.ToId != null && n.ToId.Contains(userId))
-                    .ToList();
+                List<Notification> filteredNotifications;
+
+                if (!isSupportUser)
+                {
+                    filteredNotifications = await _context.Notifications
+                        .Where(n => n.ToId == userId)
+                        .OrderByDescending(n => n.Id)
+                        .ToListAsync();
+                }
+                else
+                {
+                    var allNotifications = await _context.Notifications
+                        .OrderByDescending(n => n.Id)
+                        .ToListAsync();
+
+                    filteredNotifications = new List<Notification>();
+
+                    foreach (var notif in allNotifications)
+                    {
+                        if (notif.ToId == userId)
+                        {
+                            filteredNotifications.Add(notif);
+                            continue;
+                        }
+
+                        if (notif.Tag == "fulfilled" && notif.ProjectCardId != null)
+                        {
+                            var project = await _context.ProjectCards.FindAsync(notif.ProjectCardId.Value);
+                            if (project == null)
+                                continue;
+
+
+                            var projectEmployee = await _context.ProjectEmployees
+                                .FirstOrDefaultAsync(pe => pe.ProjectId == notif.ProjectCardId && pe.EmployeeId == _user.EmployeeId);
+
+                            if (!project.IsAcceptedBySupport)
+                            {
+                                filteredNotifications.Add(notif);
+                            }
+                            else if (projectEmployee != null)
+                            {
+                                filteredNotifications.Add(notif);
+                            }
+                        }
+                    }
+                }
 
                 Notifications.Clear();
-                foreach (var notif in userNotifications)
+                foreach (var notif in filteredNotifications)
                 {
                     Notifications.Add(notif);
                 }
@@ -80,6 +125,7 @@ namespace WpfApp1.Views
                 MessageBox.Show($"Błąd podczas ładowania powiadomień: {ex.Message}", "Błąd", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
+
 
         private async Task MarkAsReadAsync(Notification notification)
         {
@@ -153,8 +199,59 @@ namespace WpfApp1.Views
             await LoadNotificationsAsync();
         }
 
+
         public event PropertyChangedEventHandler PropertyChanged;
         private void OnPropertyChanged([CallerMemberName] string name = null)
             => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+
+        private async void seePreview_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button btn && btn.DataContext is Notification notif)
+            {
+                try
+                {
+                    var project = await _context.ProjectCards.FindAsync(notif.ProjectCardId.Value);
+
+                    if (project == null)
+                    {
+                        MessageBox.Show("Nie znaleziono projektu o podanym Id.", "Błąd", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        return;
+                    }
+
+                    var detailsPage = new ProjectDetailsPage(_mainFrame, _user, _context, project);
+                    _mainFrame.Navigate(detailsPage);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Nie można otworzyć szczegółów projektu: {ex.Message}",
+                                   "Błąd", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+        }
+
+        private async void seeProject_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button btn && btn.DataContext is Notification notif)
+            {
+                try
+                {
+                    var project = await _context.Projects.FindAsync(notif.ProjectId);
+
+                    if (project == null)
+                    {
+                        MessageBox.Show("Nie znaleziono projektu o podanym Id.", "Błąd", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        return;
+                    }
+
+                    var detailsPage = new ProjectDetailsPage(_mainFrame, _user, _context, project);
+                    _mainFrame.Navigate(detailsPage);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Nie można otworzyć szczegółów projektu: {ex.Message}",
+                                   "Błąd", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+        }
     }
 }
