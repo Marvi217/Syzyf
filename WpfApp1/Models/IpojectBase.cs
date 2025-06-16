@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MySqlX.XDevAPI;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -16,7 +17,7 @@ namespace WpfApp1.Model
         string Department { get; }
         string MainDuties { get; }
         string AdditionalDuties { get; }
-        DateTime PlannedHiringDate { get; }
+        DateTime? PlannedHiringDate { get; }
         string Education { get; }
         string PreferredStudyFields { get; }
         string AdditionalCertifications { get; }
@@ -35,6 +36,8 @@ namespace WpfApp1.Model
         string WorkModes { get; }
         string WorkingHours { get; }
         string OtherRemarks { get; }
+        public long ClientId { get; set; }
+        public long RecruiterId { get; set; }
     }
 }
 

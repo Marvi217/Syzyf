@@ -20,6 +20,11 @@ namespace WpfApp1.Model
         [ForeignKey("ProjectId")]
         public Project? Project{ get; set; }
 
+        public long? OrderId { get; set; }
+
+        [ForeignKey("OrderId")]
+        public Order Order { get; set; }
+
 
         [Column("title")]
         public string Title { get; set; }

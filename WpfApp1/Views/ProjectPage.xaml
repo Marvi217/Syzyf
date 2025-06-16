@@ -30,40 +30,34 @@
             <Button Content="Aktywne" Click="FilterActive_Click" Margin="5" Padding="10,5"/>
             <Button Content="Zakończone" Click="FilterCompleted_Click" Margin="5" Padding="10,5"/>
             <Button x:Name="NewProjectButton" Content="Nowy projekt" Click="AddProject_Click" Margin="5" Padding="10,5" Background="LightBlue"/>
+            <Button x:Name="ProjectCardButton" Content="Karta projektu" Click="FilterProjectCards_Click" Margin="5" Padding="10,5" Background="LightGreen"/>
         </StackPanel>
 
         <!-- Lista projektów -->
-        <ScrollViewer Grid.Row="2" Margin="10">
+        <ScrollViewer Grid.Row="2" Margin="10" x:Name="ProjectsListView">
             <ItemsControl ItemsSource="{Binding FilteredProjects}">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
-                        <Border x:Name="ItemBorder" 
-                                Background="WhiteSmoke" 
-                                CornerRadius="5" 
-                                Padding="5" 
-                                Margin="0,0,0,10">
+                        <Border Background="WhiteSmoke" CornerRadius="5" Padding="5" Margin="0,0,0,10">
                             <Border.Style>
                                 <Style TargetType="Border">
-                                    <Setter Property="Background" Value="WhiteSmoke"/>
                                     <Setter Property="Cursor" Value="Hand"/>
                                     <Style.Triggers>
                                         <Trigger Property="IsMouseOver" Value="True">
                                             <Setter Property="Background" Value="#FFDDEEFF"/>
-                                            <!-- jasnoniebieski -->
                                         </Trigger>
                                     </Style.Triggers>
                                 </Style>
                             </Border.Style>
 
-                            <Expander Expanded="Expander_Expanded">
+                            <Expander>
                                 <Expander.Header>
-                                    <DockPanel LastChildFill="True" VerticalAlignment="Center">
-                                        <TextBlock Text="{Binding JobTitle}" FontWeight="Bold" FontSize="14" DockPanel.Dock="Left" Margin="0,0,10,0" VerticalAlignment="Center"/>
-                                        <TextBlock Text="{Binding Client.ClientName}" Foreground="Gray" DockPanel.Dock="Left" Margin="0,0,10,0" VerticalAlignment="Center"/>
-                                        <TextBlock Text="•" Foreground="Gray" DockPanel.Dock="Left" Margin="0,0,10,0" VerticalAlignment="Center"/>
-                                        <Border DockPanel.Dock="Left" Padding="4,2" CornerRadius="5"
-                                                Background="{Binding Status, Converter={StaticResource StatusToBackgroundConverter}}"
-                                                VerticalAlignment="Center">
+                                    <DockPanel VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding JobTitle}" FontWeight="Bold" FontSize="14" Margin="0,0,10,0"/>
+                                        <TextBlock Text="{Binding Client.ClientName}" Foreground="Gray" Margin="0,0,10,0"/>
+                                        <TextBlock Text="•" Foreground="Gray" Margin="0,0,10,0"/>
+                                        <Border Padding="4,2" CornerRadius="5"
+                                                Background="{Binding Status, Converter={StaticResource StatusToBackgroundConverter}}">
                                             <TextBlock Text="{Binding Status}"
                                                        Foreground="{Binding Status, Converter={StaticResource StatusToForegroundConverter}}"
                                                        FontWeight="Bold"/>
@@ -74,10 +68,8 @@
                                 <StackPanel Margin="10">
                                     <TextBlock Text="Klient:" FontWeight="Bold"/>
                                     <TextBlock Text="{Binding Client.ClientName}" Margin="0,0,0,10"/>
-
                                     <TextBlock Text="Status:" FontWeight="Bold"/>
                                     <TextBlock Text="{Binding Status}" Margin="0,0,0,10"/>
-
                                     <TextBlock Text="Pracownicy:" FontWeight="Bold"/>
                                     <ItemsControl ItemsSource="{Binding ProjectEmployees}">
                                         <ItemsControl.ItemTemplate>
@@ -86,7 +78,6 @@
                                             </DataTemplate>
                                         </ItemsControl.ItemTemplate>
                                     </ItemsControl>
-
                                     <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
                                         <Button Content="Szczegóły" Click="ViewDetails_Click" CommandParameter="{Binding}" Margin="0,0,10,0"/>
                                     </StackPanel>
@@ -97,5 +88,25 @@
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
         </ScrollViewer>
+
+        <!-- Lista kart projektów -->
+        <ScrollViewer Grid.Row="2" Margin="10" x:Name="ProjectCardsListView" Visibility="Collapsed">
+            <ItemsControl ItemsSource="{Binding FilteredProjectCards}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Border Background="White" BorderBrush="LightGray" BorderThickness="1" CornerRadius="5" Padding="10" Margin="0,0,0,10">
+                            <StackPanel>
+                                <TextBlock Text="{Binding ProjectName}" FontWeight="Bold" FontSize="16" Margin="0,0,0,5"/>
+                                <TextBlock Text="{Binding Description}" TextWrapping="Wrap" Margin="0,0,0,5"/>
+                                <TextBlock Text="Status:" FontWeight="Bold"/>
+                                <TextBlock Text="{Binding Status}" Margin="0,0,0,5"/>
+                                <Button Content="Pokaż szczegóły" Click="ViewCardDetails_Click" CommandParameter="{Binding}" Width="150"/>
+                            </StackPanel>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+
     </Grid>
 </Page>

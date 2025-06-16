@@ -19,6 +19,7 @@ namespace WpfApp1.Models
         public string? ContactNumber { get; set; }
         public string? ContactPersonEmail { get; set; }
         public string? ContactPersonNumber { get; set; }
+        public User User { get; set; }
 
         public ICollection<Project> Projects { get; set; }
         public ICollection<ProjectCard> ProjectCards { get; set; }

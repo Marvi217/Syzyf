@@ -19,7 +19,7 @@ namespace WpfApp1.Model
         public string MainDuties { get; set; }
         public string AdditionalDuties { get; set; }
         public string DevelopmentOpportunities { get; set; }
-        public DateTime PlannedHiringDate { get; set; }
+        public DateTime? PlannedHiringDate { get; set; }
         public string Education { get; set; }
         public string PreferredStudyFields { get; set; }
         public string AdditionalCertifications { get; set; }
@@ -38,8 +38,30 @@ namespace WpfApp1.Model
         public string WorkModes { get; set; }
         public string WorkingHours { get; set; }
         public string OtherRemarks { get; set; }
-        public bool IsAcceptedBySales { get; set; }
-        public bool IsAcceptedBySupport { get; set; }
+
+        public ProjectAcceptance ProjectAcceptance { get; set; }
+
+        public bool IsAccepted
+        {
+            get
+            {
+                return ProjectAcceptance != null &&
+                       ProjectAcceptance.AcceptedByClient &&
+                       ProjectAcceptance.AcceptedByRecruiter &&
+                       ProjectAcceptance.AcceptedBySupport;
+            }
+        }
         public Client Client { get; set; }
+
+        public long RecruiterId { get; set; }
+        public Employee Recruiter { get; set; }
+    }
+
+    public enum ProjectCardStatus
+    {
+        Draft = 0,
+        Submitted = 1,
+        Approved = 2,
+        Rejected = 3
     }
 }

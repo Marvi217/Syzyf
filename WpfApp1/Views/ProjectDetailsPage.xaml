@@ -20,9 +20,23 @@
 
                 <!-- Szczegóły -->
                 <StackPanel x:Name="DetailsContainer"/>
+                <!-- Dodaj do swojego XAML w ProjectDetailsPage.xaml -->
+
+
+                <TextBlock x:Name="AcceptedStatusTextBlock"
+                   Foreground="Green"
+                   FontWeight="Bold"
+                   Margin="5"
+                   Visibility="Collapsed" />
+
 
                 <!-- Akcje -->
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,30,0,0">
+                    <Button x:Name="AssignRecruiterButton"
+                        Content="Przydziel Rekrutera"
+                        Visibility="Collapsed"
+                        Margin="5"
+                        Click="AssignRecruiterButton_Click" />
                     <Button x:Name="AcceptButton" Content="Akceptuj" Width="120" Margin="0,0,10,0" Click="Accept_Click"/>
                     <Button x:Name="RejectButton" Content="Odrzuć" Width="120" Margin="0,0,10,0" Click="Reject_Click"/>
                     <Button x:Name="EditButton" Content="Edytuj" Width="120" Click="EditProject_Click"/>

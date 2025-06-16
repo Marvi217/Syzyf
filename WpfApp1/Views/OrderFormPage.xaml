@@ -1,0 +1,42 @@
+﻿<Page x:Class="WpfApp1.Views.OrderFormPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+      xmlns:local="clr-namespace:WpfApp1.Views"
+      mc:Ignorable="d"
+      d:DesignHeight="600" d:DesignWidth="900"
+      Title="Podgląd Zlecenia">
+
+    <DockPanel LastChildFill="True">
+
+        <!-- Górne menu -->
+        <local:MenuControl x:Name="TopMenu" DockPanel.Dock="Top" />
+
+        <ScrollViewer Margin="20" VerticalScrollBarVisibility="Auto">
+            <StackPanel MaxWidth="800" HorizontalAlignment="Center" Orientation="Vertical" >
+
+                <TextBlock Text="Treść zlecenia" FontSize="24" FontWeight="Bold" Margin="0,0,0,20" />
+
+                <!-- Pole tekstowe do wyświetlania zlecenia, tylko do odczytu -->
+                <TextBox x:Name="OrderContentTextBlock" TextWrapping="Wrap" FontSize="14"
+                         Background="#FFF0F0F0" Padding="15" Height="350"
+                         IsReadOnly="True" VerticalScrollBarVisibility="Auto" />
+
+                <!-- Status zlecenia -->
+                <TextBlock x:Name="StatusTextBlock" FontWeight="SemiBold" Foreground="Green" Margin="0,10,0,0" Visibility="Collapsed" />
+
+                <!-- Przyciski -->
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,20,0,0" >
+
+                    <Button x:Name="SignButton" Content="Podpisz zlecenie" Width="140" Margin="0,0,10,0"
+                            Click="SignOrder_Click" Visibility="Collapsed" />
+
+                    <Button Content="Powrót" Width="100" Click="Back_Click" />
+                </StackPanel>
+
+            </StackPanel>
+        </ScrollViewer>
+
+    </DockPanel>
+</Page>

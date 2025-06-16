@@ -8,9 +8,9 @@ namespace WpfApp1.Models
     public class Project : IProjectBase
     {
         public long Id { get; set; }
+        public long ProjectCardId { get; set; }
         public long ClientId { get; set; }
         public int NumberOfPeople { get; set; }
-
         public string JobLevels { get; set; }
         public bool IsSalaryVisible { get; set; }
         public string JobTitle { get; set; }
@@ -18,7 +18,7 @@ namespace WpfApp1.Models
         public string MainDuties { get; set; }
         public string AdditionalDuties { get; set; }
         public string DevelopmentOpportunities { get; set; }
-        public DateTime PlannedHiringDate { get; set; }
+        public DateTime? PlannedHiringDate { get; set; }
         public string Education { get; set; }
         public string PreferredStudyFields { get; set; }
         public string AdditionalCertifications { get; set; }
@@ -38,17 +38,17 @@ namespace WpfApp1.Models
         public string WorkingHours { get; set; }
         public string OtherRemarks { get; set; }
         public ProjectStatus Status { get; set; }
+        public long RecruiterId { get; set; }
 
+        public ProjectCard ProjectCard { get; set; }
         public Client Client { get; set; }
+        public Employee Recruiter { get; set; }
         public ICollection<CandidateSelection> CandidateSelections { get; set; }
-        public ICollection<ProjectEmployee> ProjectEmployees { get; set; }
-        public ICollection<ProjectVersion> ProjectVersions { get; set; }
+
 
         public Project()
         {
             CandidateSelections = new HashSet<CandidateSelection>();
-            ProjectEmployees = new HashSet<ProjectEmployee>();
-            ProjectVersions = new List<ProjectVersion>();
         }
     }
     public enum ProjectStatus

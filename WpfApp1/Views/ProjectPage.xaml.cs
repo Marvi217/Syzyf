@@ -20,10 +20,13 @@ namespace WpfApp1.Views
         private User _user;
         private readonly SyzyfContext _context;
         private Project _selectedProject;
-        private string _currentFilter = "All";
+        private string _currentFilter = "My";
 
         public ObservableCollection<Project> Projects { get; set; }
         public ObservableCollection<Project> FilteredProjects { get; set; }
+        public ObservableCollection<ProjectCard> ProjectCards { get; set; }
+        public ObservableCollection<ProjectCard> FilteredProjectCards { get; set; } = new();
+
 
         public Project SelectedProject
         {
@@ -49,6 +52,7 @@ namespace WpfApp1.Views
 
             Projects = new ObservableCollection<Project>();
             FilteredProjects = new ObservableCollection<Project>();
+            ProjectCards = new ObservableCollection<ProjectCard>();
 
             this.Loaded += ProjectPage_Loaded;
 
@@ -57,72 +61,194 @@ namespace WpfApp1.Views
 
         private async void ProjectPage_Loaded(object sender, RoutedEventArgs e)
         {
-            if (_user.EmployeeId == null)
+            try
             {
-                MyProjectsButton.Visibility = Visibility.Collapsed;
-                NewProjectButton.Visibility = Visibility.Collapsed;
-            }
-            else if (_user.Employee.Position.PositionName == "Wsparcie")
-            {
-                NewProjectButton.Visibility = Visibility.Collapsed;
-            }
+                // Pokaż przycisk "Nowy projekt" tylko dla użytkowników Wsparcia
+                if (_user.EmployeeId == null)
+                {
+                    // Brak pracownika - ukryj przycisk
+                    NewProjectButton.Visibility = Visibility.Collapsed;
+                }
+                else
+                {
+                    // Sprawdź czy Employee i Position nie są null
+                    if (_user.Employee != null && _user.Employee.Position != null)
+                    {
+                        if (_user.Employee.Position.PositionName == "Wsparcie")
+                        {
+                            // Wsparcie - pokaż przycisk
+                            NewProjectButton.Visibility = Visibility.Visible;
+                        }
+                        else
+                        {
+                            // Inne pozycje (w tym handlowcy) - ukryj przycisk
+                            NewProjectButton.Visibility = Visibility.Collapsed;
+                        }
+                    }
+                    else
+                    {
+                        // Brak danych o pozycji - ukryj przycisk
+                        NewProjectButton.Visibility = Visibility.Collapsed;
+                    }
+                }
 
-            await LoadProjectsAsync();
+                await LoadProjectsAsync();
+                await LoadProjectCardsAsync();
+                ApplyFilter(); // Zastosuj domyślny filtr po załadowaniu danych
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Błąd podczas ładowania strony: {ex.Message}",
+                              "Błąd", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
+
+        private async Task LoadProjectCardsAsync()
+        {
+            try
+            {
+                List<ProjectCard> cards;
+
+                if (_user.Employee != null && _user.Employee.Position != null &&
+                    _user.Employee.Position.PositionName == "Wsparcie")
+                {
+                    // Wsparcie widzi wszystkie karty
+                    cards = await _context.ProjectCards
+                        .Include(pc => pc.Client)
+                        .Include(pc => pc.Recruiter)
+                        .ToListAsync();
+                }
+                else if (_user.EmployeeId != null)
+                {
+                    // Rekruter widzi tylko swoje karty
+                    cards = await _context.ProjectCards
+                        .Include(pc => pc.Client)
+                        .Include(pc => pc.Recruiter)
+                        .Where(pc => pc.RecruiterId == _user.EmployeeId.Value)
+                        .ToListAsync();
+                }
+                else
+                {
+                    // Pozostali nie widzą kart
+                    cards = new List<ProjectCard>();
+                }
+
+                ProjectCards.Clear();
+                foreach (var card in cards)
+                    ProjectCards.Add(card);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Błąd podczas ładowania kart projektów: {ex.Message}",
+                                "Błąd", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
 
         private async Task LoadProjectsAsync()
         {
             try
             {
-                var projects = await _context.Projects
-                    .Include(p => p.Client)
-                    .Include(p => p.ProjectEmployees)
-                        .ThenInclude(pe => pe.Employee)
-                    .ToListAsync();
+                List<Project> projects;
+
+                if (_user.EmployeeId != null)
+                {
+                    // Rekruter widzi tylko swoje projekty (przez ProjectCard)
+                    projects = await _context.Projects
+                        .Include(p => p.Client)
+                        .Include(p => p.ProjectCard)
+                        .Where(p => p.ProjectCard.RecruiterId == _user.EmployeeId.Value)
+                        .ToListAsync();
+                }
+                else if (_user.Employee != null && _user.Employee.Position != null &&
+                         _user.Employee.Position.PositionName == "Wsparcie")
+                {
+                    // Wsparcie widzi wszystkie projekty
+                    projects = await _context.Projects
+                        .Include(p => p.Client)
+                        .Include(p => p.ProjectCard)
+                        .ToListAsync();
+                }
+                else if (_user.ClientId != null)
+                {
+                    // Klient widzi tylko swoje projekty
+                    projects = await _context.Projects
+                        .Include(p => p.Client)
+                        .Include(p => p.ProjectCard)
+                        .Where(p => p.ClientId == _user.ClientId.Value)
+                        .ToListAsync();
+                }
+                else
+                {
+                    // Domyślnie pusta lista
+                    projects = new List<Project>();
+                }
 
                 Projects.Clear();
                 foreach (var project in projects)
-                {
                     Projects.Add(project);
-                }
-
-                ApplyFilter();
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"Błąd podczas ładowania projektów: {ex.Message}",
-                               "Błąd", MessageBoxButton.OK, MessageBoxImage.Error);
+                              "Błąd", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
         private void ApplyFilter()
         {
-            FilteredProjects.Clear();
-            IEnumerable<Project> filtered = Projects;
-
-            switch (_currentFilter)
+            try
             {
-                case "Planned":
-                    filtered = Projects.Where(p => p.Status == ProjectStatus.Planned);
-                    break;
-                case "Active":
-                    filtered = Projects.Where(p => p.Status == ProjectStatus.InProgress);
-                    break;
-                case "Completed":
-                    filtered = Projects.Where(p => p.Status == ProjectStatus.Completed);
-                    break;
-                case "My":
-                default:
-                    long employeeId = _user.EmployeeId ?? 0;
-                    filtered = Projects.Where(p => p.ProjectEmployees.Any(pe => pe.EmployeeId == employeeId));
-                    break;
+                FilteredProjects.Clear();
+                FilteredProjectCards?.Clear();
+
+                if (_currentFilter == "ProjectCards")
+                {
+                    ProjectsListView.Visibility = Visibility.Collapsed;
+                    ProjectCardsListView.Visibility = Visibility.Visible;
+
+                    // Załaduj karty projektu — np. z pełnej listy lub filtrowanej
+                    foreach (var card in ProjectCards)
+                        FilteredProjectCards.Add(card);
+                }
+                else
+                {
+                    ProjectsListView.Visibility = Visibility.Visible;
+                    ProjectCardsListView.Visibility = Visibility.Collapsed;
+
+                    IEnumerable<Project> filtered = Projects;
+
+                    switch (_currentFilter)
+                    {
+                        case "Planned":
+                            filtered = Projects.Where(p => p.Status == ProjectStatus.Planned);
+                            break;
+                        case "Active":
+                            filtered = Projects.Where(p => p.Status == ProjectStatus.InProgress);
+                            break;
+                        case "Completed":
+                            filtered = Projects.Where(p => p.Status == ProjectStatus.Completed);
+                            break;
+                        case "My":
+                        default:
+                            if (_user.EmployeeId != null)
+                                filtered = Projects;
+                            else if (_user.ClientId != null)
+                                filtered = Projects.Where(p => p.ClientId == _user.ClientId.Value);
+                            break;
+                    }
+
+                    foreach (var project in filtered)
+                        FilteredProjects.Add(project);
+                }
             }
-
-            foreach (var project in filtered)
+            catch (Exception ex)
             {
-                FilteredProjects.Add(project);
+                MessageBox.Show($"Błąd podczas filtrowania: {ex.Message}",
+                                "Błąd", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
+
 
         private void FilterPlanned_Click(object sender, RoutedEventArgs e)
         {
@@ -148,10 +274,25 @@ namespace WpfApp1.Views
             ApplyFilter();
         }
 
+        private void FilterProjectCards_Click(object sender, RoutedEventArgs e)
+        {
+            _currentFilter = "ProjectCards";
+            ApplyFilter();
+        }
+
+
         private void AddProject_Click(object sender, RoutedEventArgs e)
         {
-            var createProjectPage = new CreateProjectPage(_mainFrame, _user, _context);
-            _mainFrame.Navigate(createProjectPage);
+            try
+            {
+                var createProjectPage = new CreateProjectPage(_mainFrame, _user, _context);
+                _mainFrame.Navigate(createProjectPage);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Nie można otworzyć strony tworzenia projektu: {ex.Message}",
+                              "Błąd", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         private void Expander_Expanded(object sender, RoutedEventArgs e)
@@ -161,10 +302,25 @@ namespace WpfApp1.Views
                 SelectedProject = project;
             }
         }
-
         private void ViewDetails_Click(object sender, RoutedEventArgs e)
         {
             if (sender is Button button && button.CommandParameter is Project project)
+            {
+                try
+                {
+                    var detailsPage = new ProjectDetailsPage(_mainFrame, _user, _context, project);
+                    _mainFrame.Navigate(detailsPage);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Nie można otworzyć szczegółów projektu: {ex.Message}",
+                                   "Błąd", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+        }
+        private void ViewCardDetails_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button button && button.CommandParameter is ProjectCard project)
             {
                 try
                 {

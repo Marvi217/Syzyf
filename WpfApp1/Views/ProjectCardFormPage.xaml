@@ -16,9 +16,9 @@
                 <TextBox x:Name="NumberOfPeopleBox" Margin="0,0,0,10" Text="Liczba osób *" GotFocus="HintBox_GotFocus" LostFocus="HintBox_LostFocus"/>
 
                 <TextBlock Text="Czy wynagrodzenie ma być widoczne? *"/>
-                <StackPanel  x:Name="SalaryVisibilityPanel" Orientation="Horizontal" Margin="0,0,0,10">
-                    <CheckBox Content="Tak"/>
-                    <CheckBox Content="Nie"/>
+                <StackPanel x:Name="SalaryVisibilityPanel" Orientation="Horizontal" Margin="0,0,0,10">
+                    <RadioButton GroupName="SalaryVisibility" Content="Tak"/>
+                    <RadioButton GroupName="SalaryVisibility" Content="Nie"/>
                 </StackPanel>
 
                 <!-- Sekcja 2 -->
@@ -94,8 +94,8 @@
 
                 <TextBlock Text="System premiowy *"/>
                 <StackPanel x:Name="BonusPanel" Orientation="Horizontal" Margin="0,0,0,10">
-                    <CheckBox Content="Tak"/>
-                    <CheckBox Content="Nie" Margin="20,0,0,0"/>
+                    <RadioButton GroupName="BonusSystem" Content="Tak"/>
+                    <RadioButton GroupName="BonusSystem" Content="Nie" Margin="20,0,0,0"/>
                 </StackPanel>
 
                 <TextBox x:Name="AdditionalBenefitsBox" Margin="0,0,0,10" Text="Dodatkowe benefity" GotFocus="HintBox_GotFocus" LostFocus="HintBox_LostFocus"/>

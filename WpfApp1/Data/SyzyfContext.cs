@@ -15,16 +15,17 @@ namespace WpfApp1.Data
         public DbSet<Position> Positions { get; set; }
         public DbSet<Project> Projects { get; set; }
         public DbSet<ProjectCard> ProjectCards { get; set; }
+        public DbSet<ProjectCardVersion> ProjectCardVersions { get; set; }
         public DbSet<ProjectEmployee> ProjectEmployees { get; set; }
-        public DbSet<ProjectVersion> ProjectVersions { get; set; }
         public DbSet<RecruitmentMeeting> RecruitmentMeetings { get; set; }
         public DbSet<Notification> Notifications { get; set; }
-
+        public DbSet<ProjectAcceptance> ProjectAcceptances { get; set; }
         public DbSet<Evaluation> Evaluations { get; set; }
         public DbSet<Invoice> Invoices { get; set; }
         public DbSet<User> Users { get; set; }
         public DbSet<Meeting> Meetings { get; set; }
         public DbSet<MeetingParticipant> MeetingParticipants { get; set; }
+        public DbSet<Order> Orders { get; set; }
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -36,8 +37,8 @@ namespace WpfApp1.Data
             modelBuilder.Entity<Position>().ToTable("positions");
             modelBuilder.Entity<Project>().ToTable("projects");
             modelBuilder.Entity<ProjectCard>().ToTable("project_cards");
+            modelBuilder.Entity<ProjectCardVersion>().ToTable("project_card_version");
             modelBuilder.Entity<ProjectEmployee>().ToTable("projects-employees");
-            modelBuilder.Entity<ProjectVersion>().ToTable("projectversions");
             modelBuilder.Entity<RecruitmentMeeting>().ToTable("recruitmentmeetings");
             modelBuilder.Entity<Notification>().ToTable("notification");
             modelBuilder.Entity<Evaluation>().ToTable("evaluation");
@@ -45,6 +46,7 @@ namespace WpfApp1.Data
             modelBuilder.Entity<User>().ToTable("users");
             modelBuilder.Entity<Meeting>().ToTable("meetings");
             modelBuilder.Entity<MeetingParticipant>().ToTable("meeting_participants");
+            modelBuilder.Entity<Order>().ToTable("orders");
 
             modelBuilder.Entity<Candidate>().HasKey(c => c.Id);
             modelBuilder.Entity<CandidateSelection>().HasKey(cs => cs.Id);
@@ -53,8 +55,8 @@ namespace WpfApp1.Data
             modelBuilder.Entity<Position>().HasKey(p => p.Id);
             modelBuilder.Entity<Project>().HasKey(p => p.Id);
             modelBuilder.Entity<ProjectCard>().HasKey(pc => pc.Id);
+            modelBuilder.Entity<ProjectCardVersion>().HasKey(c => c.Id);
             modelBuilder.Entity<ProjectEmployee>().HasKey(pe => pe.Id);
-            modelBuilder.Entity<ProjectVersion>().HasKey(pv => pv.Id);
             modelBuilder.Entity<RecruitmentMeeting>().HasKey(rm => rm.Id);
             modelBuilder.Entity<Evaluation>().HasKey(ev => ev.Id);
             modelBuilder.Entity<Invoice>().HasKey(i => i.Id);
@@ -115,6 +117,7 @@ namespace WpfApp1.Data
             {
                 entity.HasKey(p => p.Id);
                 entity.Property(p => p.Id).HasColumnName("id").ValueGeneratedOnAdd();
+                entity.Property(p => p.ProjectCardId).HasColumnName("project_card_id");
                 entity.Property(p => p.ClientId).HasColumnName("client_id");
                 entity.Property(p => p.NumberOfPeople).HasColumnName("number_of_people");
                 entity.Property(p => p.IsSalaryVisible).HasColumnName("is_salary_visible");
@@ -143,6 +146,7 @@ namespace WpfApp1.Data
                 entity.Property(p => p.WorkModes).HasColumnName("work_modes").HasMaxLength(255).IsRequired(false);
                 entity.Property(p => p.WorkingHours).HasColumnName("working_hours").HasMaxLength(255).IsRequired(false);
                 entity.Property(p => p.OtherRemarks).HasColumnName("other_remarks").IsRequired(false);
+                entity.Property(p => p.RecruiterId).HasColumnName("recruiter_id");
 
                 entity.Property(p => p.Status)
                       .HasColumnName("status")
@@ -158,6 +162,8 @@ namespace WpfApp1.Data
 
             modelBuilder.Entity<ProjectCard>(entity =>
             {
+                entity.ToTable("project_cards");
+
                 entity.Property(pc => pc.Id).HasColumnName("id");
                 entity.Property(pc => pc.ClientId).HasColumnName("client_id");
                 entity.Property(pc => pc.NumberOfPeople).HasColumnName("number_of_people");
@@ -168,7 +174,7 @@ namespace WpfApp1.Data
                 entity.Property(pc => pc.MainDuties).HasColumnName("main_duties");
                 entity.Property(pc => pc.AdditionalDuties).HasColumnName("additional_duties").IsRequired(false);
                 entity.Property(pc => pc.DevelopmentOpportunities).HasColumnName("development_opportunities").IsRequired(false);
-                entity.Property(pc => pc.PlannedHiringDate).HasColumnName("planned_hiring_date");
+                entity.Property(pc => pc.PlannedHiringDate).HasColumnName("planned_hiring_date").IsRequired(false);
                 entity.Property(pc => pc.Education).HasColumnName("education").HasMaxLength(255);
                 entity.Property(pc => pc.PreferredStudyFields).HasColumnName("preferred_study_fields").HasMaxLength(255).IsRequired(false);
                 entity.Property(pc => pc.AdditionalCertifications).HasColumnName("additional_certifications").HasMaxLength(255).IsRequired(false);
@@ -187,13 +193,33 @@ namespace WpfApp1.Data
                 entity.Property(pc => pc.WorkModes).HasColumnName("work_modes").HasMaxLength(255).IsRequired(false);
                 entity.Property(pc => pc.WorkingHours).HasColumnName("working_hours").HasMaxLength(255).IsRequired(false);
                 entity.Property(pc => pc.OtherRemarks).HasColumnName("other_remarks").IsRequired(false);
-                entity.Property(pc => pc.IsAcceptedBySales).HasColumnName("is_accepted_by_sales");
-                entity.Property(pc => pc.IsAcceptedBySupport).HasColumnName("is_accepted_by_support").HasDefaultValue(false);
+                entity.Property(pc => pc.RecruiterId).HasColumnName("recruiter_id");
+
                 entity.HasOne(pc => pc.Client)
                       .WithMany(c => c.ProjectCards)
                       .HasForeignKey(pc => pc.ClientId)
-                      .HasConstraintName("project_cards_ibfk_1");
-        });
+                      .HasConstraintName("project_cards_ibfk_1")
+                      .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(pc => pc.Recruiter)
+                      .WithMany()
+                      .HasForeignKey(pc => pc.RecruiterId)
+                      .HasConstraintName("project_cards_ibfk_2")
+                      .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(pc => pc.ProjectAcceptance)
+                      .WithOne(pa => pa.ProjectCard)
+                      .HasForeignKey<ProjectAcceptance>(pa => pa.ProjectCardId)
+                      .HasConstraintName("FK_project_acceptances_project_card")
+                      .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<ProjectCardVersion>(entity =>
+            {
+                entity.Property(pcv  => pcv.Id).HasColumnName("id");
+                entity.Property(pcv => pcv.SerializedData).HasColumnName("serialized_data");
+                entity.Property(pcv => pcv.CreatedAt).HasColumnName("created_at");  
+            });
 
 
             modelBuilder.Entity<ProjectEmployee>(entity =>
@@ -201,15 +227,6 @@ namespace WpfApp1.Data
                 entity.Property(pe => pe.Id).HasColumnName("id");
                 entity.Property(pe => pe.EmployeeId).HasColumnName("employee_id");
                 entity.Property(pe => pe.ProjectId).HasColumnName("project_id");
-            });
-
-            modelBuilder.Entity<ProjectVersion>(entity =>
-            {
-                entity.Property(pv => pv.Id).HasColumnName("id");
-                entity.Property(pv => pv.Details).HasColumnName("details");
-                entity.Property(pv => pv.ChangedTime).HasColumnName("changed_time");
-                entity.Property(pv => pv.EmployeeId).HasColumnName("employee_id");
-                entity.Property(pv => pv.ProjectId).HasColumnName("project_id");
             });
 
             modelBuilder.Entity<Meeting>(entity =>
@@ -278,7 +295,60 @@ namespace WpfApp1.Data
                 entity.Property(n => n.FromId).HasColumnName("msg_from");
                 entity.Property(n => n.ToId).HasColumnName("msg_to");
                 entity.Property(n => n.IsRead).HasColumnName("is_read");
+                entity.Property(n => n.OrderId).HasColumnName("order_id");
             });
+
+            modelBuilder.Entity<ProjectAcceptance>(entity =>
+            {
+                entity.ToTable("project_acceptance");
+
+                entity.HasKey(pa => pa.Id);
+
+                entity.Property(pa => pa.Id).HasColumnName("id");
+                entity.Property(pa => pa.ProjectCardId).HasColumnName("project_card_id");
+                entity.Property(pa => pa.AcceptedByRecruiter).HasColumnName("accepted_by_recruiter");
+                entity.Property(pa => pa.RecruiterAcceptedAt).HasColumnName("recruiter_accepted_at");
+                entity.Property(pa => pa.SupportId).HasColumnName("support_id");
+                entity.Property(pa => pa.AcceptedBySupport).HasColumnName("accepted_by_support");
+                entity.Property(pa => pa.SupportAcceptedAt).HasColumnName("support_accepted_at");
+                entity.Property(pa => pa.AcceptedByClient).HasColumnName("accepted_by_client");
+                entity.Property(pa => pa.ClientAcceptedAt).HasColumnName("client_accepted_at");
+
+                entity.HasOne(pa => pa.ProjectCard)
+                      .WithOne(pc => pc.ProjectAcceptance)
+                      .HasForeignKey<ProjectAcceptance>(pa => pa.ProjectCardId)
+                      .HasConstraintName("FK_project_acceptances_project_card")
+                      .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<Order>(entity =>
+            {
+                entity.HasKey(o => o.Id);
+                entity.Property(o => o.Id).HasColumnName("id");
+
+                entity.Property(o => o.ClientId).HasColumnName("client_id").IsRequired();
+                entity.Property(o => o.SalesId).HasColumnName("sales_id");
+                entity.Property(o => o.OrderContent).HasColumnName("order_content").IsRequired();
+                entity.Property(o => o.IsSignedByClient).HasColumnName("is_signed_by_client");
+                entity.Property(o => o.SignedDate).HasColumnName("signed_date");
+                entity.Property(o => o.CreatedDate).HasColumnName("created_date");
+                entity.Property(o => o.Status).HasColumnName("status");
+                entity.Property(o => o.ProjectCardId).HasColumnName("project_card_id");
+
+                entity.HasOne(o => o.Client)
+                    .WithMany()
+                    .HasForeignKey(o => o.ClientId);
+
+                entity.HasOne(o => o.Sales)
+                    .WithMany()
+                    .HasForeignKey(o => o.SalesId);
+
+                entity.HasOne(o => o.ProjectCard)
+                    .WithMany()
+                    .HasForeignKey(o => o.ProjectCardId);
+            });
+
+
 
             modelBuilder.Entity<Notification>()
                 .HasOne(n => n.ProjectCard)
@@ -311,7 +381,6 @@ namespace WpfApp1.Data
                 .HasForeignKey(mp => mp.ClientId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            // Relacje
             modelBuilder.Entity<CandidateSelection>()
                 .HasOne(cs => cs.Candidate)
                 .WithMany(c => c.CandidateSelections)
@@ -360,24 +429,6 @@ namespace WpfApp1.Data
                 .HasForeignKey(pe => pe.EmployeeId)
                 .HasConstraintName("FKdid31jlghyg4721cyyulaue8h");
 
-            modelBuilder.Entity<ProjectEmployee>()
-                .HasOne(pe => pe.Project)
-                .WithMany(p => p.ProjectEmployees)
-                .HasForeignKey(pe => pe.ProjectId)
-                .HasConstraintName("FKiwf9jobo18083tqqyb7g6xe2l");
-
-            modelBuilder.Entity<ProjectVersion>()
-                .HasOne(pv => pv.Employee)
-                .WithMany(e => e.ProjectVersions)
-                .HasForeignKey(pv => pv.EmployeeId)
-                .HasConstraintName("FKkrw0lri0bpmqit2px7eul163l");
-
-            modelBuilder.Entity<ProjectVersion>()
-                .HasOne(pv => pv.Project)
-                .WithMany(p => p.ProjectVersions)
-                .HasForeignKey(pv => pv.ProjectId)
-                .HasConstraintName("FKecgv0u8rxetowkes6f3d6e538");
-
             modelBuilder.Entity<RecruitmentMeeting>()
                 .HasOne(rm => rm.Candidate)
                 .WithMany(c => c.RecruitmentMeetings)
@@ -395,6 +446,33 @@ namespace WpfApp1.Data
                 .WithOne(e => e.User)
                 .HasForeignKey<User>(u => u.EmployeeId)
                 .HasConstraintName("FK6p2ib82uai0pj9yk1iassppgq");
+
+            modelBuilder.Entity<User>()
+                .HasOne(u => u.Client)
+                .WithOne(c => c.User)
+                .HasForeignKey<User>(u => u.ClientId)
+                .HasConstraintName("users_ibfk_1");
+
+            modelBuilder.Entity<Order>()
+               .HasOne(o => o.Client)
+               .WithMany()
+               .HasForeignKey(o => o.ClientId)
+               .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Order>()
+                .HasOne(o => o.Sales)
+                .WithMany()
+                .HasForeignKey(o => o.SalesId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            modelBuilder.Entity<Order>()
+                .HasOne(o => o.ProjectCard)
+                .WithMany()
+                .HasForeignKey(o => o.ProjectCardId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+
+
 
             base.OnModelCreating(modelBuilder);
         }

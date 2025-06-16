@@ -13,7 +13,7 @@
         </Grid.ColumnDefinitions>
 
         <!-- Logo -->
-        <Image Source="C:\Users\pc\source\repos\WpfApp1\WpfApp1\Resources\logo.png"
+        <Image Source="C:\Users\Dell\Documents\GitHub\Syzyf\WpfApp1\Resources\logo.png"
            Height="50" VerticalAlignment="Center"
            Grid.Column="0" MouseLeftButtonDown="Logo_MouseLeftButtonDown" />
 
@@ -22,6 +22,7 @@
         <StackPanel Orientation="Horizontal"
                     HorizontalAlignment="Right"
                     Grid.Column="2">
+            <Button x:Name="OrderButton" Content="Zlecenia" Click="OrderButton_Click" Visibility="Collapsed" Margin="5"/>
             <Button x:Name="AddEmployeeButton" Content="Dodaj pracownika" Click="AddEmployeeButton_Click" Visibility="Collapsed" Margin="5"/>
             <Button x:Name="ProjectsButton" Content="Projekty" Margin="5" Click="ProjectsButton_Click"/>
             <Button x:Name="NotificationsButton" Content="Powiadomienia" Margin="5" Click="NotificationsButton_Click"/>

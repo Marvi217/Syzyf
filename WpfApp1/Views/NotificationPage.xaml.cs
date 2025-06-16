@@ -58,12 +58,8 @@ namespace WpfApp1.Views
             try
             {
                 long userId = _user.Id;
-                bool isSupportUser = false;
-                if (_user.EmployeeId != null)
-                {
-                    isSupportUser = _user.Employee.Position.PositionName == "Wsparcie";
-                }
-
+                bool isSupportUser = _user.EmployeeId != null &&
+                                     _user.Employee?.Position?.PositionName == "Wsparcie";
 
                 List<Notification> filteredNotifications;
 
@@ -90,26 +86,12 @@ namespace WpfApp1.Views
                             continue;
                         }
 
-                        if (notif.Tag == "fulfilled" && notif.ProjectCardId != null)
+                        if (notif.Tag == "orderSigned" && notif.ProjectCardId == null)
                         {
-                            var project = await _context.ProjectCards.FindAsync(notif.ProjectCardId.Value);
-                            if (project == null)
-                                continue;
-
-
-                            var projectEmployee = await _context.ProjectEmployees
-                                .FirstOrDefaultAsync(pe => pe.ProjectId == notif.ProjectCardId && pe.EmployeeId == _user.EmployeeId);
-
-                            if (!project.IsAcceptedBySupport)
-                            {
-                                filteredNotifications.Add(notif);
-                            }
-                            else if (projectEmployee != null)
-                            {
-                                filteredNotifications.Add(notif);
-                            }
+                            filteredNotifications.Add(notif);
                         }
                     }
+
                 }
 
                 Notifications.Clear();
@@ -155,11 +137,137 @@ namespace WpfApp1.Views
             }
         }
 
+        // NOWE METODY DLA OBSŁUGI ZLECEŃ
+
+        private async void ViewOrder_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button btn && btn.DataContext is Notification notif && notif.OrderId.HasValue)
+            {
+                try
+                {
+                    var order = await _context.Orders
+                        .Include(o => o.Client)
+                        .Include(o => o.Sales)
+                        .FirstOrDefaultAsync(o => o.Id == notif.OrderId.Value);
+
+                    if (order == null)
+                    {
+                        MessageBox.Show("Nie znaleziono zlecenia.", "Błąd", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        return;
+                    }
+
+                    var orderPage = new OrderFormPage(_mainFrame, _user, _context, order);
+                    _mainFrame.Navigate(orderPage);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Nie można otworzyć zlecenia: {ex.Message}",
+                                   "Błąd", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+        }
+
+        private async void SendProjectCard_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button btn && btn.DataContext is Notification notif && notif.OrderId.HasValue)
+            {
+                try
+                {
+                    var order = await _context.Orders
+                        .Include(o => o.Client)
+                        .ThenInclude(c => c.User)
+                        .FirstOrDefaultAsync(o => o.Id == notif.OrderId.Value);
+
+                    if (order == null || !order.IsSignedByClient)
+                    {
+                        MessageBox.Show("Zlecenie nie zostało jeszcze podpisane przez klienta.", 
+                                       "Błąd", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        return;
+                    }
+
+                    // Sprawdź czy karta projektu już nie została wysłana
+                    if (order.Status >= OrderStatus.ProjectCardSent)
+                    {
+                        MessageBox.Show("Karta projektu została już wysłana dla tego zlecenia.", 
+                                       "Informacja", MessageBoxButton.OK, MessageBoxImage.Information);
+                        return;
+                    }
+
+                    // Aktualizuj status zlecenia
+                    order.Status = OrderStatus.ProjectCardSent;
+                    _context.Orders.Update(order);
+
+                    // Wyślij powiadomienie do klienta o konieczności wypełnienia karty projektu
+                    var clientNotification = new Notification
+                    {
+                        FromId = _user.Id,
+                        ToId = order.Client.User.Id,
+                        Title = "Karta projektu do wypełnienia",
+                        Message = "Dziękujemy za podpisanie zlecenia. Prosimy o wypełnienie karty projektu z szczegółowymi wymaganiami stanowiska.",
+                        Tag = "projectCardRequest",
+                        OrderId = order.Id,
+                        IsRead = false
+                    };
+
+                    _context.Notifications.Add(clientNotification);
+                    await _context.SaveChangesAsync();
+
+                    MessageBox.Show("Wysłano prośbę o wypełnienie karty projektu do klienta.", 
+                                   "Sukces", MessageBoxButton.OK, MessageBoxImage.Information);
+
+                    await LoadNotificationsAsync(); // Odśwież powiadomienia
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Błąd podczas wysyłania karty projektu: {ex.Message}",
+                                   "Błąd", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+        }
+
+        private async void AssignRecruiter_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button btn && btn.DataContext is Notification notif && notif.ProjectCardId.HasValue)
+            {
+                try
+                {
+                    var projectCard = await _context.ProjectCards
+                        .Include(pc => pc.Client)
+                        .FirstOrDefaultAsync(pc => pc.Id == notif.ProjectCardId.Value);
+
+                    if (projectCard == null)
+                    {
+                        MessageBox.Show("Nie znaleziono karty projektu.", "Błąd", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        return;
+                    }
+
+                    // Otwórz okno wyboru rekrutera
+                    var assignRecruiterPage = new AssignRecruiterPage(_mainFrame, _user, _context, projectCard);
+                    _mainFrame.Navigate(assignRecruiterPage);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Błąd podczas przydzielania rekrutera: {ex.Message}",
+                                   "Błąd", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+        }
+
+        // STARE METODY (zachowane)
+
         private void FillProjectCard_Click(object sender, RoutedEventArgs e)
         {
             if (sender is Button btn && btn.DataContext is Notification notif)
             {
-                _mainFrame.Navigate(new ProjectCardFormPage(_mainFrame, _user, _context, notif));
+                // Sprawdź czy to powiadomienie o konieczności wypełnienia karty projektu
+                if (notif.Tag == "projectCardRequest" && notif.OrderId.HasValue)
+                {
+                    _mainFrame.Navigate(new ProjectCardFormPage(_mainFrame, _user, _context, notif));
+                }
+                else
+                {
+                    _mainFrame.Navigate(new ProjectCardFormPage(_mainFrame, _user, _context, notif));
+                }
             }
         }
 
@@ -199,18 +307,13 @@ namespace WpfApp1.Views
             await LoadNotificationsAsync();
         }
 
-
-        public event PropertyChangedEventHandler PropertyChanged;
-        private void OnPropertyChanged([CallerMemberName] string name = null)
-            => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
-
         private async void seePreview_Click(object sender, RoutedEventArgs e)
         {
             if (sender is Button btn && btn.DataContext is Notification notif)
             {
                 try
                 {
-                    var project = await _context.ProjectCards.FindAsync(notif.ProjectCardId.Value);
+                    var project = await _context.ProjectCards.FindAsync(notif.ProjectCardId);
 
                     if (project == null)
                     {
@@ -235,7 +338,7 @@ namespace WpfApp1.Views
             {
                 try
                 {
-                    var project = await _context.Projects.FindAsync(notif.ProjectId);
+                    var project = await _context.Projects.FindAsync(notif.ProjectId.Value);
 
                     if (project == null)
                     {
@@ -253,5 +356,9 @@ namespace WpfApp1.Views
                 }
             }
         }
+
+        public event PropertyChangedEventHandler PropertyChanged;
+        private void OnPropertyChanged([CallerMemberName] string name = null)
+            => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
     }
 }

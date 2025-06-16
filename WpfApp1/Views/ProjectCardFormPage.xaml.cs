@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.EntityFrameworkCore;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
@@ -12,27 +13,33 @@ namespace WpfApp1.Views
 {
     public partial class ProjectCardFormPage : Page
     {
-        private Frame _mainFrame;
-        private User _user;
-        private SyzyfContext _context;
+        private readonly Frame _mainFrame;
+        private readonly User _user;
+        private readonly SyzyfContext _context;
         private Notification _notification;
         private Project _project;
 
+        // Konstruktor do tworzenia nowej karty projektu (bez istniejącego projektu)
         public ProjectCardFormPage(Frame mainFrame, User user, SyzyfContext context, Notification notification)
         {
             InitializeComponent();
+
             _mainFrame = mainFrame;
             _user = user;
             _context = context;
             _notification = notification;
+            _project = null;
 
             TopMenu.Initialize(_mainFrame, _user);
+            ConfigureButtonVisibility();
             SetInitialHintColors();
         }
 
+        // Konstruktor do edycji istniejącego projektu
         public ProjectCardFormPage(Frame mainFrame, User user, SyzyfContext context, Project project)
         {
             InitializeComponent();
+
             _mainFrame = mainFrame;
             _user = user;
             _context = context;
@@ -46,64 +53,63 @@ namespace WpfApp1.Views
 
         private void ConfigureButtonVisibility()
         {
-            bool isProjectContext = _project != null;
+            bool isEditMode = _project != null;
 
-            SaveCardButton.Visibility = isProjectContext ? Visibility.Collapsed : Visibility.Visible;
-            CancelCardButton.Visibility = isProjectContext ? Visibility.Collapsed : Visibility.Visible;
+            SaveCardButton.Visibility = isEditMode ? Visibility.Collapsed : Visibility.Visible;
+            CancelCardButton.Visibility = isEditMode ? Visibility.Collapsed : Visibility.Visible;
 
-            SaveProjectButton.Visibility = isProjectContext ? Visibility.Visible : Visibility.Collapsed;
-            CancelProjectButton.Visibility = isProjectContext ? Visibility.Visible : Visibility.Collapsed;
+            SaveProjectButton.Visibility = isEditMode ? Visibility.Visible : Visibility.Collapsed;
+            CancelProjectButton.Visibility = isEditMode ? Visibility.Visible : Visibility.Collapsed;
         }
-
-
 
         private async void SaveProjectCard_Click(object sender, RoutedEventArgs e)
         {
             await using var transaction = await _context.Database.BeginTransactionAsync();
+
             try
             {
                 var jobLevels = GetCheckedValuesFromPanel("JobLevelsPanel");
                 var education = GetCheckedValuesFromPanel("EducationPanel");
                 var employmentForms = GetCheckedValuesFromPanel("EmploymentFormsPanel");
                 var workModes = GetCheckedValuesFromPanel("WorkModesPanel");
-                var salaryVsibility = GetCheckedValuesFromPanel("SalaryVisibilityPanel");
+                var salaryVisibility = GetCheckedValuesFromPanel("SalaryVisibilityPanel");
                 var bonusSystem = GetCheckedValuesFromPanel("BonusPanel");
 
-                bool salary = salaryVsibility?.Contains("Tak") == true;
+                bool salaryVisible = salaryVisibility?.Contains("Tak") == true;
                 bool bonus = bonusSystem?.Contains("Tak") == true;
 
-                var project = new ProjectCard
+                var projectCard = new ProjectCard
                 {
                     ClientId = _user.ClientId ?? 0,
                     NumberOfPeople = int.TryParse(NumberOfPeopleBox.Text, out var num) ? num : 0,
-                    IsSalaryVisible = salary,
-                    JobTitle = JobTitleBox.Text,
+                    IsSalaryVisible = salaryVisible,
+                    JobTitle = JobTitleBox.Text.Trim(),
                     JobLevels = jobLevels,
-                    Department = DepartmentBox.Text,
-                    MainDuties = MainDutiesBox.Text,
-                    AdditionalDuties = AdditionalDutiesBox.Text,
+                    Department = DepartmentBox.Text.Trim(),
+                    MainDuties = MainDutiesBox.Text.Trim(),
+                    AdditionalDuties = AdditionalDutiesBox.Text.Trim(),
                     PlannedHiringDate = PlannedHiringDatePicker.SelectedDate ?? DateTime.Now,
                     Education = education,
-                    PreferredStudyFields = PreferredStudyFieldsBox.Text,
-                    AdditionalCertifications = AdditionalCertificationsBox.Text,
-                    RequiredExperience = RequiredExperienceBox.Text,
-                    PreferredExperience = PreferredExperienceBox.Text,
-                    RequiredSkills = RequiredSkillsBox.Text,
-                    PreferredSkills = PreferredSkillsBox.Text,
-                    RequiredLanguages = RequiredLanguagesBox.Text,
-                    PreferredLanguages = PreferredLanguagesBox.Text,
+                    PreferredStudyFields = PreferredStudyFieldsBox.Text.Trim(),
+                    AdditionalCertifications = AdditionalCertificationsBox.Text.Trim(),
+                    RequiredExperience = RequiredExperienceBox.Text.Trim(),
+                    PreferredExperience = PreferredExperienceBox.Text.Trim(),
+                    RequiredSkills = RequiredSkillsBox.Text.Trim(),
+                    PreferredSkills = PreferredSkillsBox.Text.Trim(),
+                    RequiredLanguages = RequiredLanguagesBox.Text.Trim(),
+                    PreferredLanguages = PreferredLanguagesBox.Text.Trim(),
                     EmploymentsForms = employmentForms,
-                    GrossSalary = GrossSalaryBox.Text,
+                    GrossSalary = GrossSalaryBox.Text.Trim(),
                     BonusSystem = bonus,
-                    AdditionalBenefits = AdditionalBenefitsBox.Text,
-                    WorkTools = WorkToolsBox.Text,
-                    WorkPlace = WorkPlaceBox.Text,
+                    AdditionalBenefits = AdditionalBenefitsBox.Text.Trim(),
+                    WorkTools = WorkToolsBox.Text.Trim(),
+                    WorkPlace = WorkPlaceBox.Text.Trim(),
                     WorkModes = workModes,
-                    WorkingHours = WorkingHoursBox.Text,
-                    OtherRemarks = OtherRemarksBox.Text,
+                    WorkingHours = WorkingHoursBox.Text.Trim(),
+                    OtherRemarks = OtherRemarksBox.Text.Trim()
                 };
 
-                await _context.ProjectCards.AddAsync(project);
+                await _context.ProjectCards.AddAsync(projectCard);
                 await _context.SaveChangesAsync();
 
                 if (_notification != null)
@@ -112,9 +118,9 @@ namespace WpfApp1.Views
 
                     var response = new Notification
                     {
-                        ProjectCardId = project.Id,
+                        ProjectCardId = projectCard.Id,
                         Title = "Karta projektu",
-                        Message = $"Projekt '{project.JobTitle}' został zapisany przez użytkownika {_user.Login} w dniu {DateTime.Now:yyyy-MM-dd HH:mm}.",
+                        Message = $"Karta projektu '{projectCard.JobTitle}' został zapisany przez użytkownika {_user.Login} w dniu {DateTime.Now:yyyy-MM-dd HH:mm}.",
                         FromId = _user.Id,
                         Tag = "fulfilled",
                         ToId = _notification.FromId,
@@ -127,6 +133,7 @@ namespace WpfApp1.Views
                 }
 
                 await transaction.CommitAsync();
+
                 MessageBox.Show("Projekt został zapisany pomyślnie.", "Sukces", MessageBoxButton.OK, MessageBoxImage.Information);
                 _mainFrame.GoBack();
             }
@@ -139,97 +146,113 @@ namespace WpfApp1.Views
 
         private async void SaveProject_Click(object sender, RoutedEventArgs e)
         {
+            if (_project == null)
+            {
+                MessageBox.Show("Brak projektu do aktualizacji.", "Błąd", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
             await using var transaction = await _context.Database.BeginTransactionAsync();
+
             try
             {
-                if (_project == null)
-                {
-                    MessageBox.Show("Brak projektu do aktualizacji.", "Błąd", MessageBoxButton.OK, MessageBoxImage.Warning);
-                    return;
-                }
-
                 var project = await _context.Projects.FindAsync(_project.Id);
+
                 if (project == null)
                 {
                     MessageBox.Show("Projekt nie został znaleziony w bazie danych.", "Błąd", MessageBoxButton.OK, MessageBoxImage.Error);
                     return;
                 }
 
+                // Aktualizacja pól projektu
                 project.NumberOfPeople = int.TryParse(NumberOfPeopleBox.Text, out var num) ? num : 0;
                 project.IsSalaryVisible = GetCheckedValuesFromPanel("SalaryVisibilityPanel")?.Contains("Tak") == true;
-                project.JobTitle = JobTitleBox.Text;
+                project.JobTitle = JobTitleBox.Text.Trim();
                 project.JobLevels = GetCheckedValuesFromPanel("JobLevelsPanel");
-                project.Department = DepartmentBox.Text;
-                project.MainDuties = MainDutiesBox.Text;
-                project.AdditionalDuties = AdditionalDutiesBox.Text;
+                project.Department = DepartmentBox.Text.Trim();
+                project.MainDuties = MainDutiesBox.Text.Trim();
+                project.AdditionalDuties = AdditionalDutiesBox.Text.Trim();
                 project.PlannedHiringDate = PlannedHiringDatePicker.SelectedDate ?? DateTime.Now;
                 project.Education = GetCheckedValuesFromPanel("EducationPanel");
-                project.PreferredStudyFields = PreferredStudyFieldsBox.Text;
-                project.AdditionalCertifications = AdditionalCertificationsBox.Text;
-                project.RequiredExperience = RequiredExperienceBox.Text;
-                project.PreferredExperience = PreferredExperienceBox.Text;
-                project.RequiredSkills = RequiredSkillsBox.Text;
-                project.PreferredSkills = PreferredSkillsBox.Text;
-                project.RequiredLanguages = RequiredLanguagesBox.Text;
-                project.PreferredLanguages = PreferredLanguagesBox.Text;
+                project.PreferredStudyFields = PreferredStudyFieldsBox.Text.Trim();
+                project.AdditionalCertifications = AdditionalCertificationsBox.Text.Trim();
+                project.RequiredExperience = RequiredExperienceBox.Text.Trim();
+                project.PreferredExperience = PreferredExperienceBox.Text.Trim();
+                project.RequiredSkills = RequiredSkillsBox.Text.Trim();
+                project.PreferredSkills = PreferredSkillsBox.Text.Trim();
+                project.RequiredLanguages = RequiredLanguagesBox.Text.Trim();
+                project.PreferredLanguages = PreferredLanguagesBox.Text.Trim();
                 project.EmploymentsForms = GetCheckedValuesFromPanel("EmploymentFormsPanel");
-                project.GrossSalary = GrossSalaryBox.Text;
+                project.GrossSalary = GrossSalaryBox.Text.Trim();
                 project.BonusSystem = GetCheckedValuesFromPanel("BonusPanel")?.Contains("Tak") == true;
-                project.AdditionalBenefits = AdditionalBenefitsBox.Text;
-                project.WorkTools = WorkToolsBox.Text;
-                project.WorkPlace = WorkPlaceBox.Text;
+                project.AdditionalBenefits = AdditionalBenefitsBox.Text.Trim();
+                project.WorkTools = WorkToolsBox.Text.Trim();
+                project.WorkPlace = WorkPlaceBox.Text.Trim();
                 project.WorkModes = GetCheckedValuesFromPanel("WorkModesPanel");
-                project.WorkingHours = WorkingHoursBox.Text;
-                project.OtherRemarks = OtherRemarksBox.Text;
+                project.WorkingHours = WorkingHoursBox.Text.Trim();
+                project.OtherRemarks = OtherRemarksBox.Text.Trim();
 
                 _context.Projects.Update(project);
                 await _context.SaveChangesAsync();
 
                 Notification response = null;
+
                 if (_user.ClientId == null)
                 {
+                    // Jeżeli użytkownik nie ma ClientId — powiadom klienta
                     var clientUser = _context.Users.FirstOrDefault(u => u.ClientId == project.ClientId);
 
-                    response = new Notification
+                    if (clientUser != null)
                     {
-                        ProjectId = project.Id,
-                        Title = "Projekt",
-                        Message = $"Projekt '{project.JobTitle}' został zmieniony przez użytkownika {_user.Login} w dniu {DateTime.Now:yyyy-MM-dd HH:mm}.",
-                        FromId = _user.Id,
-                        Tag = "changed",
-                        ToId = clientUser.Id,
-                        IsRead = false
-                    };
-
+                        response = new Notification
+                        {
+                            ProjectId = project.Id,
+                            Title = "Projekt",
+                            Message = $"Projekt '{project.JobTitle}' został zmieniony przez użytkownika {_user.Login} w dniu {DateTime.Now:yyyy-MM-dd HH:mm}.",
+                            FromId = _user.Id,
+                            Tag = "changed",
+                            ToId = clientUser.Id,
+                            IsRead = false
+                        };
+                    }
                 }
                 else if (_user.EmployeeId == null)
                 {
-                    var employeeUser = _context.ProjectEmployees
-                        .Where(pe => pe.ProjectId == project.Id)
+                    // Jeżeli użytkownik nie ma EmployeeId — powiadom wsparcie
+                    var employee = _context.ProjectEmployees
+                        .Include(pe => pe.Employee)
+                            .ThenInclude(e => e.User)
+                        .Include(pe => pe.Employee.Position)
+                        .Where(pe => pe.ProjectId == project.Id && pe.Employee.Position.PositionName == "Wsparcie")
                         .Select(pe => pe.Employee)
-                        .FirstOrDefault(e => e.Position.PositionName == "Wsparcie");
+                        .FirstOrDefault();
 
-                    response = new Notification
+                    var employeeUser = employee?.User;
+
+                    if (employeeUser != null)
                     {
-                        ProjectId = project.Id,
-                        Title = "Projekt",
-                        Message = $"Projekt '{project.JobTitle}' został zmieniony przez {employeeUser.FirstName + " "+ employeeUser.LastName} w dniu {DateTime.Now:yyyy-MM-dd HH:mm}.",
-                        FromId = _user.Id,
-                        Tag = "changed",
-                        ToId = employeeUser.Id,
-                        IsRead = false
-                    };
+                        response = new Notification
+                        {
+                            ProjectId = project.Id,
+                            Title = "Projekt",
+                            Message = $"Projekt '{project.JobTitle}' został zmieniony przez {employeeUser.Employee.FirstName} {employeeUser.Employee.LastName} w dniu {DateTime.Now:yyyy-MM-dd HH:mm}.",
+                            FromId = _user.Id,
+                            Tag = "changed",
+                            ToId = employeeUser.Id,
+                            IsRead = false
+                        };
+                    }
                 }
-
 
                 if (response != null)
                 {
                     _context.Notifications.Add(response);
                 }
+
                 await _context.SaveChangesAsync();
-                
 
                 await transaction.CommitAsync();
+
                 MessageBox.Show("Zmiany zostały zapisane.", "Sukces", MessageBoxButton.OK, MessageBoxImage.Information);
                 _mainFrame.GoBack();
             }
@@ -239,7 +262,6 @@ namespace WpfApp1.Views
                 MessageBox.Show($"Błąd podczas aktualizacji projektu:\n{ex.Message}", "Błąd", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-
 
         private string GetCheckedValuesFromPanel(string panelName)
         {
@@ -255,7 +277,6 @@ namespace WpfApp1.Views
 
             return string.Empty;
         }
-
 
         private void Cancel_Click(object sender, RoutedEventArgs e)
         {
@@ -284,33 +305,33 @@ namespace WpfApp1.Views
             }
         }
 
-        private void SetHintForTextBox(TextBox tb, string hint = null)
+        private void SetHintForTextBox(TextBox tb, string ?hint = null)
         {
             if (hint == null)
             {
-                switch (tb.Name)
+                hint = tb.Name switch
                 {
-                    case "NumberOfPeopleBox": hint = "Liczba osób"; break;
-                    case "JobTitleBox": hint = "Nazwa stanowiska"; break;
-                    case "DepartmentBox": hint = "Dział"; break;
-                    case "MainDutiesBox": hint = "Główne obowiązki"; break;
-                    case "AdditionalDutiesBox": hint = "Dodatkowe obowiązki"; break;
-                    case "PreferredStudyFieldsBox": hint = "Preferowane kierunki studiów"; break;
-                    case "AdditionalCertificationsBox": hint = "Dodatkowe uprawnienia"; break;
-                    case "RequiredExperienceBox": hint = "Wymagane doświadczenie"; break;
-                    case "PreferredExperienceBox": hint = "Mile widziane doświadczenie"; break;
-                    case "RequiredSkillsBox": hint = "Wymagane umiejętności"; break;
-                    case "PreferredSkillsBox": hint = "Mile widziane umiejętności"; break;
-                    case "RequiredLanguagesBox": hint = "Wymagane języki"; break;
-                    case "PreferredLanguagesBox": hint = "Mile widziane języki"; break;
-                    case "GrossSalaryBox": hint = "Wynagrodzenie brutto"; break;
-                    case "AdditionalBenefitsBox": hint = "Dodatkowe benefity"; break;
-                    case "WorkToolsBox": hint = "Narzędzia pracy"; break;
-                    case "WorkPlaceBox": hint = "Miejsce pracy"; break;
-                    case "WorkingHoursBox": hint = "Godziny pracy"; break;
-                    case "OtherRemarksBox": hint = "Pozostałe informacje"; break;
-                    default: hint = ""; break;
-                }
+                    "NumberOfPeopleBox" => "Liczba osób",
+                    "JobTitleBox" => "Nazwa stanowiska",
+                    "DepartmentBox" => "Dział",
+                    "MainDutiesBox" => "Główne obowiązki",
+                    "AdditionalDutiesBox" => "Dodatkowe obowiązki",
+                    "PreferredStudyFieldsBox" => "Preferowane kierunki studiów",
+                    "AdditionalCertificationsBox" => "Dodatkowe uprawnienia",
+                    "RequiredExperienceBox" => "Wymagane doświadczenie",
+                    "PreferredExperienceBox" => "Mile widziane doświadczenie",
+                    "RequiredSkillsBox" => "Wymagane umiejętności",
+                    "PreferredSkillsBox" => "Mile widziane umiejętności",
+                    "RequiredLanguagesBox" => "Wymagane języki",
+                    "PreferredLanguagesBox" => "Mile widziane języki",
+                    "GrossSalaryBox" => "Wynagrodzenie brutto",
+                    "AdditionalBenefitsBox" => "Dodatkowe benefity",
+                    "WorkToolsBox" => "Narzędzia pracy",
+                    "WorkPlaceBox" => "Miejsce pracy",
+                    "WorkingHoursBox" => "Godziny pracy",
+                    "OtherRemarksBox" => "Pozostałe informacje",
+                    _ => ""
+                };
             }
 
             tb.Text = hint;
@@ -322,34 +343,26 @@ namespace WpfApp1.Views
             if (_project == null)
                 return;
 
-            NumberOfPeopleBox.Text = _project.NumberOfPeople > 0 ? _project.NumberOfPeople.ToString() : "Liczba osób";
-
-            JobTitleBox.Text = string.IsNullOrWhiteSpace(_project.JobTitle) ? "Nazwa stanowiska" : _project.JobTitle;
-
-            DepartmentBox.Text = string.IsNullOrWhiteSpace(_project.Department) ? "Dział" : _project.Department;
-
-            MainDutiesBox.Text = string.IsNullOrWhiteSpace(_project.MainDuties) ? "Główne obowiązki" : _project.MainDuties;
-
-            AdditionalDutiesBox.Text = string.IsNullOrWhiteSpace(_project.AdditionalDuties) ? "Dodatkowe obowiązki" : _project.AdditionalDuties;
-
-            if (PlannedHiringDatePicker.SelectedDate == null)
-                PlannedHiringDatePicker.SelectedDate = _project.PlannedHiringDate;
-
-            PreferredStudyFieldsBox.Text = string.IsNullOrWhiteSpace(_project.PreferredStudyFields) ? "Preferowane kierunki studiów" : _project.PreferredStudyFields;
-            AdditionalCertificationsBox.Text = string.IsNullOrWhiteSpace(_project.AdditionalCertifications) ? "Dodatkowe uprawnienia" : _project.AdditionalCertifications;
-            RequiredExperienceBox.Text = string.IsNullOrWhiteSpace(_project.RequiredExperience) ? "Wymagane doświadczenie" : _project.RequiredExperience;
-            PreferredExperienceBox.Text = string.IsNullOrWhiteSpace(_project.PreferredExperience) ? "Mile widziane doświadczenie" : _project.PreferredExperience;
-            RequiredSkillsBox.Text = string.IsNullOrWhiteSpace(_project.RequiredSkills) ? "Wymagane umiejętności" : _project.RequiredSkills;
-            PreferredSkillsBox.Text = string.IsNullOrWhiteSpace(_project.PreferredSkills) ? "Mile widziane umiejętności" : _project.PreferredSkills;
-            RequiredLanguagesBox.Text = string.IsNullOrWhiteSpace(_project.RequiredLanguages) ? "Wymagane języki" : _project.RequiredLanguages;
-            PreferredLanguagesBox.Text = string.IsNullOrWhiteSpace(_project.PreferredLanguages) ? "Mile widziane języki" : _project.PreferredLanguages;
-
-            GrossSalaryBox.Text = string.IsNullOrWhiteSpace(_project.GrossSalary) ? "Wynagrodzenie brutto" : _project.GrossSalary;
-            AdditionalBenefitsBox.Text = string.IsNullOrWhiteSpace(_project.AdditionalBenefits) ? "Dodatkowe benefity" : _project.AdditionalBenefits;
-            WorkToolsBox.Text = string.IsNullOrWhiteSpace(_project.WorkTools) ? "Narzędzia pracy" : _project.WorkTools;
-            WorkPlaceBox.Text = string.IsNullOrWhiteSpace(_project.WorkPlace) ? "Miejsce pracy" : _project.WorkPlace;
-            WorkingHoursBox.Text = string.IsNullOrWhiteSpace(_project.WorkingHours) ? "Godziny pracy" : _project.WorkingHours;
-            OtherRemarksBox.Text = string.IsNullOrWhiteSpace(_project.OtherRemarks) ? "Pozostałe informacje" : _project.OtherRemarks;
+            NumberOfPeopleBox.Text = _project.NumberOfPeople > 0 ? _project.NumberOfPeople.ToString() : "";
+            JobTitleBox.Text = _project.JobTitle ?? "";
+            DepartmentBox.Text = _project.Department ?? "";
+            MainDutiesBox.Text = _project.MainDuties ?? "";
+            AdditionalDutiesBox.Text = _project.AdditionalDuties ?? "";
+            PlannedHiringDatePicker.SelectedDate = _project.PlannedHiringDate;
+            PreferredStudyFieldsBox.Text = _project.PreferredStudyFields ?? "";
+            AdditionalCertificationsBox.Text = _project.AdditionalCertifications ?? "";
+            RequiredExperienceBox.Text = _project.RequiredExperience ?? "";
+            PreferredExperienceBox.Text = _project.PreferredExperience ?? "";
+            RequiredSkillsBox.Text = _project.RequiredSkills ?? "";
+            PreferredSkillsBox.Text = _project.PreferredSkills ?? "";
+            RequiredLanguagesBox.Text = _project.RequiredLanguages ?? "";
+            PreferredLanguagesBox.Text = _project.PreferredLanguages ?? "";
+            GrossSalaryBox.Text = _project.GrossSalary ?? "";
+            AdditionalBenefitsBox.Text = _project.AdditionalBenefits ?? "";
+            WorkToolsBox.Text = _project.WorkTools ?? "";
+            WorkPlaceBox.Text = _project.WorkPlace ?? "";
+            WorkingHoursBox.Text = _project.WorkingHours ?? "";
+            OtherRemarksBox.Text = _project.OtherRemarks ?? "";
 
             SetCheckBoxesFromCommaSeparated(JobLevelsPanel, _project.JobLevels);
             SetCheckBoxesFromCommaSeparated(EducationPanel, _project.Education);
@@ -365,11 +378,11 @@ namespace WpfApp1.Views
             if (panel == null || string.IsNullOrWhiteSpace(values))
                 return;
 
-            var selectedItems = values.Split(new[] { ", " }, StringSplitOptions.RemoveEmptyEntries);
+            var selectedValues = values.Split(',').Select(s => s.Trim());
 
-            foreach (CheckBox cb in panel.Children.OfType<CheckBox>())
+            foreach (var cb in panel.Children.OfType<CheckBox>())
             {
-                cb.IsChecked = selectedItems.Contains(cb.Content.ToString());
+                cb.IsChecked = selectedValues.Contains(cb.Content.ToString());
             }
         }
 
@@ -378,28 +391,37 @@ namespace WpfApp1.Views
             if (panel == null)
                 return;
 
-            foreach (CheckBox cb in panel.Children.OfType<CheckBox>())
+            foreach (var cb in panel.Children.OfType<CheckBox>())
             {
                 cb.IsChecked = cb.Content.ToString() == valueToCheck;
             }
         }
-
-
         private void HintBox_GotFocus(object sender, RoutedEventArgs e)
         {
-            if (sender is TextBox tb && tb.Foreground == Brushes.Gray)
+            if (sender is TextBox tb)
             {
-                tb.Text = "";
-                tb.Foreground = Brushes.Black;
+                // Przykład: czyścimy tekst podpowiedzi, gdy textbox zyskuje fokus
+                if (tb.Text == tb.Tag?.ToString())
+                {
+                    tb.Text = "";
+                    tb.Foreground = Brushes.Black; // np. zmiana koloru tekstu na czarny
+                }
             }
         }
 
         private void HintBox_LostFocus(object sender, RoutedEventArgs e)
         {
-            if (sender is TextBox tb && string.IsNullOrWhiteSpace(tb.Text))
+            if (sender is TextBox tb)
             {
-                SetHintForTextBox(tb);
+                // Przykład: ustawiamy tekst podpowiedzi, jeśli pole jest puste
+                if (string.IsNullOrWhiteSpace(tb.Text))
+                {
+                    tb.Text = tb.Tag?.ToString(); // zakładam, że tekst podpowiedzi jest w Tagu
+                    tb.Foreground = Brushes.Gray;  // np. szary kolor dla podpowiedzi
+                }
             }
         }
+
     }
+
 }

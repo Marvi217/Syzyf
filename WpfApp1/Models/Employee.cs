@@ -17,7 +17,6 @@ namespace WpfApp1.Model
         public long PositionId { get; set; }
         public Position Position { get; set; }
 
-        public ICollection<ProjectVersion> ProjectVersions { get; set; } = new List<ProjectVersion>();
         public ICollection<ProjectEmployee> ProjectEmployees { get; set; } = new List<ProjectEmployee>();
 
         public User User { get; set; }

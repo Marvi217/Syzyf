@@ -1,0 +1,39 @@
+﻿<Page x:Class="WpfApp1.Views.CreateOrderPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+      xmlns:local="clr-namespace:WpfApp1.Views"
+      mc:Ignorable="d"
+      d:DesignHeight="600" d:DesignWidth="900"
+      Title="Tworzenie Zlecenia">
+
+    <DockPanel LastChildFill="True">
+        <!-- Górne menu -->
+        <local:MenuControl x:Name="TopMenu" DockPanel.Dock="Top" />
+
+        <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="20">
+            <StackPanel Orientation="Vertical" HorizontalAlignment="Stretch" MaxWidth="700">
+
+                <TextBlock Text="Tworzenie nowego zlecenia" FontSize="24" FontWeight="Bold" Margin="0,0,0,20"/>
+
+                <!-- Wybór klienta -->
+                <TextBlock Text="Wybierz klienta:" FontWeight="SemiBold" />
+                <ComboBox x:Name="ClientComboBox" Margin="0,5,0,15" />
+
+                <!-- Treść zlecenia -->
+                <TextBlock Text="Treść zlecenia:" FontWeight="SemiBold" />
+                <TextBox x:Name="OrderContentTextBox" AcceptsReturn="True" 
+                         Height="300" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto"
+                         Margin="0,5,0,20" />
+
+                <!-- Przycisk wysłania i anulowania -->
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" >
+                    <Button Content="Wyślij zlecenie" Width="140" Margin="0,0,10,0" Click="SendOrder_Click"/>
+                    <Button Content="Anuluj" Width="100" Click="Cancel_Click"/>
+                </StackPanel>
+
+            </StackPanel>
+        </ScrollViewer>
+    </DockPanel>
+</Page>
