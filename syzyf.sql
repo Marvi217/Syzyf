@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Cze 11, 2025 at 10:06 PM
+-- Generation Time: Cze 16, 2025 at 03:45 PM
 -- Wersja serwera: 10.4.32-MariaDB
 -- Wersja PHP: 8.0.30
 
@@ -108,7 +108,8 @@ INSERT INTO `employees` (`id`, `email`, `first_name`, `last_name`, `phone_number
 (3, 't@gmail.com', 'Tomasz', 'Niedziolka', '123456789', '2025-05-26', 3),
 (4, 't.niedziolka3@gmail.com', 'Tomasz', 'Niedziółka', '507295456', '2025-06-02', 1),
 (5, 'tn89280@xd.pl', 'Tomasz', 'Niedziółka', '728187291', '2025-06-10', 3),
-(6, 'p@syzyf.pl', 'Piotr', 'P', '3426794723', '2025-06-10', 2);
+(6, 'p@syzyf.pl', 'Piotr', 'P', '3426794723', '2025-06-10', 2),
+(7, 'jdkjb', 'Seba', 'P', '8329750832094', '2025-06-14', 4);
 
 -- --------------------------------------------------------
 
@@ -193,18 +194,46 @@ CREATE TABLE `notification` (
   `message` text DEFAULT NULL,
   `is_read` tinyint(1) NOT NULL DEFAULT 0,
   `project_card_id` bigint(20) DEFAULT NULL,
-  `project_id` bigint(20) NOT NULL
+  `project_id` bigint(20) DEFAULT NULL,
+  `order_id` bigint(20) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `notification`
 --
 
-INSERT INTO `notification` (`id`, `msg_from`, `msg_to`, `title`, `tag`, `message`, `is_read`, `project_card_id`, `project_id`) VALUES
-(9, 11, 10, 'Karta Projektu', 'filled', 'Dzień dobry,\r\n\r\n                Jestem Piotr P z firmy Syzyf. Zwracam się do Państwa z prośbą o wypełnienie karty projektu, która pozwoli nam lepiej zrozumieć Państwa potrzeby i oczekiwania.\r\n\r\n                Karta projektu zawiera kluczowe informacje niezbędne do prawidłowego zaplanowania i realizacji współpracy. Prosimy o szczegółowe wypełnienie wszystkich sekcji, co umożliwi nam przygotowanie oferty maksymalnie dopasowanej do Państwa wymagań.\r\n\r\n                W przypadku pytań lub wątpliwości dotyczących wypełniania karty, proszę o kontakt pod tym adresem. Jesteśmy do Państwa dyspozycji i chętnie udzielimy wszelkich wyjaśnień.\r\n\r\n                Dziękujemy za zainteresowanie naszymi usługami i wyrażamy nadzieję na owocną współpracę.\r\n\r\n                Z poważaniem,\r\n                Piotr P\r\n                Firma Syzyf\r\n\r\n                ---\r\n                Karta projektu zostanie dostarczona w osobnym komunikacie.', 0, NULL, 0),
-(20, 10, 11, 'Karta projektu', 'fulfilled', 'Projekt \'Nazwa stanowiska *\' został zapisany przez użytkownika c w dniu 2025-06-11 17:57.', 0, 2, 0),
-(21, 6, 10, 'Projekt', 'changed', 'Projekt \'Helpdesk\' został zmieniony przez użytkownika 89280 w dniu 2025-06-11 20:26.', 0, 2, 2),
-(22, 10, 5, 'Projekt', 'changed', 'Projekt \'Helpdesk\' został zmieniony przez Tomasz Niedziółka w dniu 2025-06-11 22:00.', 0, NULL, 2);
+INSERT INTO `notification` (`id`, `msg_from`, `msg_to`, `title`, `tag`, `message`, `is_read`, `project_card_id`, `project_id`, `order_id`) VALUES
+(38, 11, 10, 'Nowe zlecenie do podpisu', 'newOrder', 'Handlowiec Piotr P przesłał Państwu zlecenie do podpisu. Proszę zapoznać się z treścią i podpisać zlecenie.', 0, NULL, NULL, 8),
+(39, 10, 3, 'Zlecenie podpisane', 'orderSigned', 'Klient c podpisał zlecenie. Wyślij kartę projektu do wypełnienia.', 0, NULL, NULL, 8),
+(40, 10, 6, 'Zlecenie podpisane', 'orderSigned', 'Klient c podpisał zlecenie. Wyślij kartę projektu do wypełnienia.', 0, NULL, NULL, 8),
+(41, 6, 10, 'Karta Projektu', 'filled', 'Dzień dobry,\r\n\r\n                Jestem Tomasz Niedziółka z firmy Syzyf. Zwracam się do Państwa z prośbą o wypełnienie karty projektu, która pozwoli nam lepiej zrozumieć Państwa potrzeby i oczekiwania.\r\n\r\n                Karta projektu zawiera kluczowe informacje niezbędne do prawidłowego zaplanowania i realizacji współpracy. Prosimy o szczegółowe wypełnienie wszystkich sekcji, co umożliwi nam przygotowanie oferty maksymalnie dopasowanej do Państwa wymagań.\r\n\r\n                W przypadku pytań lub wątpliwości dotyczących wypełniania karty, proszę o kontakt pod tym adresem. Jesteśmy do Państwa dyspozycji i chętnie udzielimy wszelkich wyjaśnień.\r\n\r\n                Dziękujemy za zainteresowanie naszymi usługami i wyrażamy nadzieję na owocną współpracę.\r\n\r\n                Z poważaniem,\r\n                Tomasz Niedziółka\r\n                Firma Syzyf\r\n\r\n                ---\r\n                Karta projektu zostanie dostarczona w osobnym komunikacie.', 0, NULL, NULL, NULL),
+(42, 10, 6, 'Karta projektu', 'fulfilled', 'Karta projektu \'Nazwa stanowiska *\' został zapisany przez użytkownika c w dniu 2025-06-14 09:15.', 0, 5, NULL, NULL),
+(50, 6, 10, 'Karta Projektu', 'firstAccepted', 'Dzień dobry,\n\nKarta projektu Nazwa stanowiska * została wstępnie zaakceptowana przez pracowników (wsparcia). \nProszę czekać na dalsze powiadomienia związane z jej zatwierdzeniem.', 0, NULL, NULL, NULL);
+
+-- --------------------------------------------------------
+
+--
+-- Struktura tabeli dla tabeli `orders`
+--
+
+CREATE TABLE `orders` (
+  `id` bigint(20) NOT NULL,
+  `client_id` bigint(20) NOT NULL,
+  `sales_id` bigint(20) DEFAULT NULL,
+  `order_content` text NOT NULL,
+  `is_signed_by_client` tinyint(1) NOT NULL DEFAULT 0,
+  `signed_date` timestamp NULL DEFAULT NULL,
+  `created_date` timestamp NOT NULL DEFAULT current_timestamp(),
+  `status` int(11) NOT NULL,
+  `project_card_id` bigint(20) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `orders`
+--
+
+INSERT INTO `orders` (`id`, `client_id`, `sales_id`, `order_content`, `is_signed_by_client`, `signed_date`, `created_date`, `status`, `project_card_id`) VALUES
+(8, 3, 6, 'ZLECENIE NA USŁUGI REKRUTACYJNE\r\n\r\nSzanowny Kliencie,\r\n\r\nNiniejszym przedstawiamy Państwu zlecenie na świadczenie usług rekrutacyjnych zgodnie z poniższymi warunkami:\r\n\r\n1. PRZEDMIOT ZLECENIA\r\n   - Przeprowadzenie procesu rekrutacyjnego zgodnie z wymaganiami określonymi w karcie projektu\r\n   - Preselekcja kandydatów na podstawie profilu stanowiska\r\n   - Przeprowadzenie wywiadów wstępnych\r\n   - Przedstawienie najlepszych kandydatów do ostatecznej selekcji\r\n\r\n2. ZAKRES USŁUG\r\n   - Analiza potrzeb rekrutacyjnych\r\n   - Opracowanie profilu kandydata\r\n   - Publikacja ogłoszenia w odpowiednich kanałach\r\n   - Wstępna selekcja aplikacji\r\n   - Przeprowadzenie wywiadów rekrutacyjnych\r\n   - Weryfikacja referencji\r\n   - Przedstawienie rekomendacji\r\n\r\n3. WARUNKI WSPÓŁPRACY\r\n   - Czas realizacji: zgodnie z harmonogramem projektu\r\n   - Forma płatności: według umowy ramowej\r\n   - Gwarancja: 3 miesiące od daty zatrudnienia\r\n\r\n4. DOKUMENTY WYMAGANE\r\n   - Karta projektu z szczegółowym opisem stanowiska\r\n   - Profil kandydata\r\n   - Dodatkowe wymagania i preferencje\r\n\r\nPodpisując niniejsze zlecenie, Klient wyraża zgodę na rozpoczęcie procesu rekrutacyjnego oraz zobowiązuje się do dostarczenia niezbędnych informacji w postaci karty projektu.\r\n\r\nData wystawienia: 13.06.2025\r\n\r\nZlecenie wymaga podpisu elektronicznego Klienta dla aktywacji procesu rekrutacyjnego.', 1, '2025-06-13 21:14:10', '2025-06-13 21:13:57', 1, NULL);
 
 -- --------------------------------------------------------
 
@@ -236,6 +265,7 @@ INSERT INTO `positions` (`id`, `position_name`) VALUES
 CREATE TABLE `projects` (
   `id` bigint(20) NOT NULL,
   `client_id` bigint(20) NOT NULL,
+  `recruiter_id` bigint(20) DEFAULT NULL,
   `number_of_people` int(11) NOT NULL,
   `is_salary_visible` tinyint(1) NOT NULL,
   `contact_full_name` varchar(255) NOT NULL,
@@ -266,49 +296,34 @@ CREATE TABLE `projects` (
   `job_levels` varchar(255) NOT NULL,
   `education` varchar(255) NOT NULL,
   `employment_forms` varchar(255) NOT NULL,
-  `work_modes` varchar(255) NOT NULL
+  `work_modes` varchar(255) NOT NULL,
+  `project_card_id` bigint(20) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
---
--- Dumping data for table `projects`
---
-
-INSERT INTO `projects` (`id`, `client_id`, `number_of_people`, `is_salary_visible`, `contact_full_name`, `contact_email`, `contact_phone`, `job_title`, `department`, `main_duties`, `additional_duties`, `development_opportunities`, `planned_hiring_date`, `preferred_study_fields`, `additional_certifications`, `required_experience`, `preferred_experience`, `required_skills`, `preferred_skills`, `required_languages`, `preferred_languages`, `gross_salary`, `bonus_system`, `additional_benefits`, `work_tools`, `work_place`, `working_hours`, `other_remarks`, `status`, `job_levels`, `education`, `employment_forms`, `work_modes`) VALUES
-(2, 3, 1000, 0, '', '', NULL, 'Helpdesk', 'IT', 'coś', 'Dodatkowe obowiązki', NULL, '2025-06-11', 'Preferowane kierunki studiów', 'Dodatkowe uprawnienia', 'asdchpasohncponasdpolnsaplok', 'Mile widziane doświadczenie', 'hdfphsnpoifjsponfcdposd', 'Mile widziane umiejętności', 'Wymagane języki *', 'Mile widziane języki', '5000', 1, 'Dodatkowe benefity', 'Narzędzia pracy', 'Miejsce pracy *', '8-18', 'Pozostałe informacje', 'Planned', 'Praktykant/ka', 'Zawodowe, Średnie, Licencjat/Inżynier', 'Umowa o pracę, Umowa zlecenie', 'Hybrydowa'),
-(3, 0, 0, 0, '', '', NULL, 'Nazwa stanowiska *', 'IT', 'Główne obowiązki *', 'Dodatkowe obowiązki', NULL, '2025-06-11', 'Preferowane kierunki studiów', 'Dodatkowe uprawnienia', 'Wymagane doświadczenie *', 'Mile widziane doświadczenie', 'Wymagane umiejętności *', 'Mile widziane umiejętności', 'Wymagane języki *', 'Mile widziane języki', 'Wynagrodzenie brutto *', 0, 'Dodatkowe benefity', 'Narzędzia pracy', 'Miejsce pracy *', 'Godziny pracy *', 'Pozostałe informacje', 'Planned', '', '', '', '');
-
 -- --------------------------------------------------------
 
 --
--- Struktura tabeli dla tabeli `projects-employees`
+-- Struktura tabeli dla tabeli `project_acceptance`
 --
 
-CREATE TABLE `projects-employees` (
+CREATE TABLE `project_acceptance` (
   `id` bigint(20) NOT NULL,
-  `employee_id` bigint(20) DEFAULT NULL,
-  `project_id` bigint(20) DEFAULT NULL
+  `project_card_id` bigint(20) NOT NULL,
+  `accepted_by_recruiter` tinyint(1) NOT NULL DEFAULT 0,
+  `recruiter_accepted_at` datetime DEFAULT NULL,
+  `support_id` bigint(20) DEFAULT NULL,
+  `accepted_by_support` tinyint(1) NOT NULL DEFAULT 0,
+  `support_accepted_at` datetime DEFAULT NULL,
+  `accepted_by_client` tinyint(1) NOT NULL DEFAULT 0,
+  `client_accepted_at` datetime DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data for table `projects-employees`
+-- Dumping data for table `project_acceptance`
 --
 
-INSERT INTO `projects-employees` (`id`, `employee_id`, `project_id`) VALUES
-(2, 5, 2);
-
--- --------------------------------------------------------
-
---
--- Struktura tabeli dla tabeli `projectversions`
---
-
-CREATE TABLE `projectversions` (
-  `id` bigint(20) NOT NULL,
-  `changed_time` datetime(6) DEFAULT NULL,
-  `details` text DEFAULT NULL,
-  `employee_id` bigint(20) DEFAULT NULL,
-  `project_id` bigint(20) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+INSERT INTO `project_acceptance` (`id`, `project_card_id`, `accepted_by_recruiter`, `recruiter_accepted_at`, `support_id`, `accepted_by_support`, `support_accepted_at`, `accepted_by_client`, `client_accepted_at`) VALUES
+(0, 5, 0, NULL, 6, 1, '2025-06-14 10:47:50', 0, NULL);
 
 -- --------------------------------------------------------
 
@@ -347,71 +362,17 @@ CREATE TABLE `project_cards` (
   `education` varchar(255) NOT NULL,
   `employment_forms` varchar(255) NOT NULL,
   `work_modes` varchar(255) NOT NULL,
-  `is_accepted_by_sales` tinyint(1) NOT NULL DEFAULT 0,
-  `is_accepted_by_support` tinyint(1) NOT NULL DEFAULT 0
+  `first_acceptance` tinyint(1) NOT NULL DEFAULT 0,
+  `second_acceptance` tinyint(1) NOT NULL DEFAULT 0,
+  `recruiter_id` bigint(20) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `project_cards`
 --
 
-INSERT INTO `project_cards` (`id`, `client_id`, `number_of_people`, `is_salary_visible`, `job_title`, `department`, `main_duties`, `additional_duties`, `development_opportunities`, `planned_hiring_date`, `preferred_study_fields`, `additional_certifications`, `required_experience`, `preferred_experience`, `required_skills`, `preferred_skills`, `required_languages`, `preferred_languages`, `gross_salary`, `bonus_system`, `additional_benefits`, `work_tools`, `work_place`, `working_hours`, `other_remarks`, `status`, `job_levels`, `education`, `employment_forms`, `work_modes`, `is_accepted_by_sales`, `is_accepted_by_support`) VALUES
-(2, 3, 0, 0, 'Nazwa stanowiska *', 'Dział *', 'Główne obowiązki *', 'Dodatkowe obowiązki', NULL, '2025-06-11', 'Preferowane kierunki studiów', 'Dodatkowe uprawnienia', 'Wymagane doświadczenie *', 'Mile widziane doświadczenie', 'Wymagane umiejętności *', 'Mile widziane umiejętności', 'Wymagane języki *', 'Mile widziane języki', 'Wynagrodzenie brutto *', 0, 'Dodatkowe benefity', 'Narzędzia pracy', 'Miejsce pracy *', 'Godziny pracy *', 'Pozostałe informacje', 'Planned', '', '', '', '', 1, 1);
-
--- --------------------------------------------------------
-
---
--- Struktura tabeli dla tabeli `project_education_levels`
---
-
-CREATE TABLE `project_education_levels` (
-  `project_id` bigint(20) NOT NULL,
-  `education_level` varchar(255) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
-
---
--- Struktura tabeli dla tabeli `project_employment_forms`
---
-
-CREATE TABLE `project_employment_forms` (
-  `project_id` bigint(20) NOT NULL,
-  `employment_form` varchar(255) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
-
---
--- Struktura tabeli dla tabeli `project_job_levels`
---
-
-CREATE TABLE `project_job_levels` (
-  `project_id` bigint(20) NOT NULL,
-  `job_level` varchar(255) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
-
---
--- Struktura tabeli dla tabeli `project_reasons`
---
-
-CREATE TABLE `project_reasons` (
-  `project_id` bigint(20) NOT NULL,
-  `reason` varchar(255) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
-
---
--- Struktura tabeli dla tabeli `project_work_modes`
---
-
-CREATE TABLE `project_work_modes` (
-  `project_id` bigint(20) NOT NULL,
-  `work_mode` varchar(255) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+INSERT INTO `project_cards` (`id`, `client_id`, `number_of_people`, `is_salary_visible`, `job_title`, `department`, `main_duties`, `additional_duties`, `development_opportunities`, `planned_hiring_date`, `preferred_study_fields`, `additional_certifications`, `required_experience`, `preferred_experience`, `required_skills`, `preferred_skills`, `required_languages`, `preferred_languages`, `gross_salary`, `bonus_system`, `additional_benefits`, `work_tools`, `work_place`, `working_hours`, `other_remarks`, `status`, `job_levels`, `education`, `employment_forms`, `work_modes`, `first_acceptance`, `second_acceptance`, `recruiter_id`) VALUES
+(5, 3, 0, 0, 'Nazwa stanowiska *', 'Dział *', 'Główne obowiązki *', 'Dodatkowe obowiązki', NULL, '2025-06-14', 'Preferowane kierunki studiów', 'Dodatkowe uprawnienia', 'Wymagane doświadczenie *', 'Mile widziane doświadczenie', 'Wymagane umiejętności *', 'Mile widziane umiejętności', 'Wymagane języki *', 'Mile widziane języki', 'Wynagrodzenie brutto *', 0, 'Dodatkowe benefity', 'Narzędzia pracy', 'Miejsce pracy *', 'Godziny pracy *', 'Pozostałe informacje', 'Planned', '', '', '', '', 0, 0, 7);
 
 -- --------------------------------------------------------
 
@@ -441,8 +402,8 @@ CREATE TABLE `users` (
   `login` varchar(255) DEFAULT NULL,
   `password` varchar(255) DEFAULT NULL,
   `employee_id` bigint(20) DEFAULT NULL,
-  `client_id` int(11) DEFAULT NULL,
-  `candidate_id` int(11) DEFAULT NULL
+  `client_id` bigint(20) DEFAULT NULL,
+  `candidate_id` bigint(20) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -457,7 +418,8 @@ INSERT INTO `users` (`id`, `email`, `login`, `password`, `employee_id`, `client_
 (6, NULL, '89280', '1234', 5, NULL, NULL),
 (9, NULL, '1@1.pl', '1', NULL, NULL, 5),
 (10, NULL, 'c', '1', NULL, 3, NULL),
-(11, NULL, 'p@syzyf.pl', '1', 6, NULL, NULL);
+(11, NULL, 'p@syzyf.pl', '1', 6, NULL, NULL),
+(12, NULL, 'r', '1', 7, NULL, NULL);
 
 --
 -- Indeksy dla zrzutów tabel
@@ -526,6 +488,18 @@ ALTER TABLE `meeting_participants`
 --
 ALTER TABLE `notification`
   ADD PRIMARY KEY (`id`),
+  ADD KEY `project_card_id` (`project_card_id`),
+  ADD KEY `msg_from` (`msg_from`),
+  ADD KEY `msg_to` (`msg_to`),
+  ADD KEY `order_id` (`order_id`);
+
+--
+-- Indeksy dla tabeli `orders`
+--
+ALTER TABLE `orders`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `client_id` (`client_id`),
+  ADD KEY `sales_id` (`sales_id`),
   ADD KEY `project_card_id` (`project_card_id`);
 
 --
@@ -542,20 +516,11 @@ ALTER TABLE `projects`
   ADD KEY `idx_client_id` (`client_id`);
 
 --
--- Indeksy dla tabeli `projects-employees`
+-- Indeksy dla tabeli `project_acceptance`
 --
-ALTER TABLE `projects-employees`
+ALTER TABLE `project_acceptance`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `FKdid31jlghyg4721cyyulaue8h` (`employee_id`),
-  ADD KEY `FKiwf9jobo18083tqqyb7g6xe2l` (`project_id`);
-
---
--- Indeksy dla tabeli `projectversions`
---
-ALTER TABLE `projectversions`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `FKkrw0lri0bpmqit2px7eul163l` (`employee_id`),
-  ADD KEY `FKecgv0u8rxetowkes6f3d6e538` (`project_id`);
+  ADD KEY `FK_project_acceptances_project_card` (`project_card_id`);
 
 --
 -- Indeksy dla tabeli `project_cards`
@@ -563,36 +528,6 @@ ALTER TABLE `projectversions`
 ALTER TABLE `project_cards`
   ADD PRIMARY KEY (`id`),
   ADD KEY `client_id` (`client_id`);
-
---
--- Indeksy dla tabeli `project_education_levels`
---
-ALTER TABLE `project_education_levels`
-  ADD KEY `FK7e2ky4i96v3ej1mc06dskcdgf` (`project_id`);
-
---
--- Indeksy dla tabeli `project_employment_forms`
---
-ALTER TABLE `project_employment_forms`
-  ADD KEY `FKg30yrodoxwtssq5cok86mfaa9` (`project_id`);
-
---
--- Indeksy dla tabeli `project_job_levels`
---
-ALTER TABLE `project_job_levels`
-  ADD KEY `FKmsobfr8wyrx56hwwpgibxckeb` (`project_id`);
-
---
--- Indeksy dla tabeli `project_reasons`
---
-ALTER TABLE `project_reasons`
-  ADD KEY `FK31v8cek5sqixpla1xlyjkiu81` (`project_id`);
-
---
--- Indeksy dla tabeli `project_work_modes`
---
-ALTER TABLE `project_work_modes`
-  ADD KEY `FKo10sso9efi1fco9l1q7i2wle0` (`project_id`);
 
 --
 -- Indeksy dla tabeli `recruitmentmeetings`
@@ -607,7 +542,9 @@ ALTER TABLE `recruitmentmeetings`
 --
 ALTER TABLE `users`
   ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `UKd1s31g1a7ilra77m65xmka3ei` (`employee_id`);
+  ADD UNIQUE KEY `UKd1s31g1a7ilra77m65xmka3ei` (`employee_id`),
+  ADD KEY `client_id` (`client_id`),
+  ADD KEY `candidate_id` (`candidate_id`);
 
 --
 -- AUTO_INCREMENT for dumped tables
@@ -635,7 +572,7 @@ ALTER TABLE `clients`
 -- AUTO_INCREMENT for table `employees`
 --
 ALTER TABLE `employees`
-  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT for table `evaluation`
@@ -665,7 +602,13 @@ ALTER TABLE `meeting_participants`
 -- AUTO_INCREMENT for table `notification`
 --
 ALTER TABLE `notification`
-  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=23;
+  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=51;
+
+--
+-- AUTO_INCREMENT for table `orders`
+--
+ALTER TABLE `orders`
+  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT for table `positions`
@@ -680,22 +623,10 @@ ALTER TABLE `projects`
   MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
--- AUTO_INCREMENT for table `projects-employees`
---
-ALTER TABLE `projects-employees`
-  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
-
---
--- AUTO_INCREMENT for table `projectversions`
---
-ALTER TABLE `projectversions`
-  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT;
-
---
 -- AUTO_INCREMENT for table `project_cards`
 --
 ALTER TABLE `project_cards`
-  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT for table `recruitmentmeetings`
@@ -707,7 +638,7 @@ ALTER TABLE `recruitmentmeetings`
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
+  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 
 --
 -- Constraints for dumped tables
@@ -752,70 +683,24 @@ ALTER TABLE `meeting_participants`
 -- Constraints for table `notification`
 --
 ALTER TABLE `notification`
-  ADD CONSTRAINT `notification_ibfk_1` FOREIGN KEY (`project_card_id`) REFERENCES `project_cards` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+  ADD CONSTRAINT `notification_ibfk_1` FOREIGN KEY (`project_card_id`) REFERENCES `project_cards` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `notification_ibfk_2` FOREIGN KEY (`msg_from`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `notification_ibfk_3` FOREIGN KEY (`msg_to`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `notification_ibfk_4` FOREIGN KEY (`order_id`) REFERENCES `orders` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
--- Constraints for table `projects-employees`
+-- Constraints for table `orders`
 --
-ALTER TABLE `projects-employees`
-  ADD CONSTRAINT `FKdid31jlghyg4721cyyulaue8h` FOREIGN KEY (`employee_id`) REFERENCES `employees` (`id`),
-  ADD CONSTRAINT `FKiwf9jobo18083tqqyb7g6xe2l` FOREIGN KEY (`project_id`) REFERENCES `projects` (`id`);
+ALTER TABLE `orders`
+  ADD CONSTRAINT `orders_ibfk_1` FOREIGN KEY (`client_id`) REFERENCES `clients` (`id`),
+  ADD CONSTRAINT `orders_ibfk_2` FOREIGN KEY (`sales_id`) REFERENCES `employees` (`id`),
+  ADD CONSTRAINT `orders_ibfk_3` FOREIGN KEY (`project_card_id`) REFERENCES `project_cards` (`id`);
 
 --
--- Constraints for table `projectversions`
+-- Constraints for table `project_acceptance`
 --
-ALTER TABLE `projectversions`
-  ADD CONSTRAINT `FKecgv0u8rxetowkes6f3d6e538` FOREIGN KEY (`project_id`) REFERENCES `projects` (`id`),
-  ADD CONSTRAINT `FKkrw0lri0bpmqit2px7eul163l` FOREIGN KEY (`employee_id`) REFERENCES `employees` (`id`);
-
---
--- Constraints for table `project_cards`
---
-ALTER TABLE `project_cards`
-  ADD CONSTRAINT `project_cards_ibfk_1` FOREIGN KEY (`client_id`) REFERENCES `clients` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
-
---
--- Constraints for table `project_education_levels`
---
-ALTER TABLE `project_education_levels`
-  ADD CONSTRAINT `FK7e2ky4i96v3ej1mc06dskcdgf` FOREIGN KEY (`project_id`) REFERENCES `projects` (`id`);
-
---
--- Constraints for table `project_employment_forms`
---
-ALTER TABLE `project_employment_forms`
-  ADD CONSTRAINT `FKg30yrodoxwtssq5cok86mfaa9` FOREIGN KEY (`project_id`) REFERENCES `projects` (`id`);
-
---
--- Constraints for table `project_job_levels`
---
-ALTER TABLE `project_job_levels`
-  ADD CONSTRAINT `FKmsobfr8wyrx56hwwpgibxckeb` FOREIGN KEY (`project_id`) REFERENCES `projects` (`id`);
-
---
--- Constraints for table `project_reasons`
---
-ALTER TABLE `project_reasons`
-  ADD CONSTRAINT `FK31v8cek5sqixpla1xlyjkiu81` FOREIGN KEY (`project_id`) REFERENCES `projects` (`id`);
-
---
--- Constraints for table `project_work_modes`
---
-ALTER TABLE `project_work_modes`
-  ADD CONSTRAINT `FKo10sso9efi1fco9l1q7i2wle0` FOREIGN KEY (`project_id`) REFERENCES `projects` (`id`);
-
---
--- Constraints for table `recruitmentmeetings`
---
-ALTER TABLE `recruitmentmeetings`
-  ADD CONSTRAINT `FKqocug7k7x65ifk7852af4mbm0` FOREIGN KEY (`candidate_id`) REFERENCES `candidates` (`id`),
-  ADD CONSTRAINT `FKtoxclyjc589lc4peirv8i24fp` FOREIGN KEY (`client_id`) REFERENCES `clients` (`id`);
-
---
--- Constraints for table `users`
---
-ALTER TABLE `users`
-  ADD CONSTRAINT `FK6p2ib82uai0pj9yk1iassppgq` FOREIGN KEY (`employee_id`) REFERENCES `employees` (`id`);
+ALTER TABLE `project_acceptance`
+  ADD CONSTRAINT `FK_project_acceptances_project_card` FOREIGN KEY (`project_card_id`) REFERENCES `project_cards` (`id`);
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
