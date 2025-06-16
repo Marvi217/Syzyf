@@ -37,6 +37,7 @@
                         Visibility="Collapsed"
                         Margin="5"
                         Click="AssignRecruiterButton_Click" />
+                    <Button x:Name="AcceptButton2" Content="Akceptuj2" Width="120" Margin="0,0,10,0" Click="Accept_Click2"/>
                     <Button x:Name="AcceptButton" Content="Akceptuj" Width="120" Margin="0,0,10,0" Click="Accept_Click"/>
                     <Button x:Name="RejectButton" Content="Odrzuć" Width="120" Margin="0,0,10,0" Click="Reject_Click"/>
                     <Button x:Name="EditButton" Content="Edytuj" Width="120" Click="EditProject_Click"/>

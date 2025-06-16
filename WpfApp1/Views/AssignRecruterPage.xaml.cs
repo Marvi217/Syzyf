@@ -25,7 +25,7 @@ namespace WpfApp1.Views
             _user = user;
             _context = context;
             _projectCard = projectCard;
-
+            TopMenu.Initialize(_mainFrame, _user);
             LoadRecruiters();
         }
 
@@ -36,6 +36,7 @@ namespace WpfApp1.Views
                 // Załaduj listę rekruterów (np. pracownicy z pozycją "Handlowiec" lub inną)
                 _recruiters = await _context.Employees
                     .Include(e => e.Position)
+                    .Include(e => e.User)
                     .Where(e => e.Position.PositionName == "Rekruter")
                     .ToListAsync();
 
@@ -60,12 +61,20 @@ namespace WpfApp1.Views
                 // Przypisz wybranego rekrutera do projektu (_projectCard)
                 if (_projectCard is ProjectCard card)
                 {
-                    card.RecruiterId = selectedRecruiter.Id;
-
-                    _context.ProjectCards.Update(card);
+                    // Przykład: po zaakceptowaniu karty, wysyłasz powiadomienie do rekrutera:
+                    var message = $"Dzień dobry, jestem {_user.Employee.FirstName} {_user.Employee.LastName}. Chciałbym Ci przydzielić tę kartę projektu: {card.JobTitle}. Proszę o podgląd, przyjęcie lub odrzucenie.";
+                    var notification = new Notification
+                    {
+                        FromId = _user.Id,
+                        ToId = selectedRecruiter.User.Id,
+                        Title = "Przydzielenie karty projektu",
+                        Message = message,
+                        Tag = "projectAssignmentRequest",
+                        ProjectCardId = card.Id,
+                        IsRead = false
+                    };
+                    _context.Notifications.Add(notification);
                     await _context.SaveChangesAsync();
-
-                    MessageBox.Show($"Rekruter {selectedRecruiter.FirstName+ " " + selectedRecruiter.LastName} został przypisany do projektu.", "Sukces", MessageBoxButton.OK, MessageBoxImage.Information);
 
                     // Opcjonalnie wróć do poprzedniej strony
                     _mainFrame.GoBack();

@@ -11,6 +11,7 @@
     <Page.Resources>
         <conv:StatusToBackgroundConverter x:Key="StatusToBackgroundConverter" />
         <conv:StatusToForegroundConverter x:Key="StatusToForegroundConverter" />
+        <conv:EmployeeToFullNameConverter x:Key="EmployeeToFullNameConverter" />
     </Page.Resources>
 
     <Grid>
@@ -30,7 +31,6 @@
             <Button Content="Aktywne" Click="FilterActive_Click" Margin="5" Padding="10,5"/>
             <Button Content="Zakończone" Click="FilterCompleted_Click" Margin="5" Padding="10,5"/>
             <Button x:Name="NewProjectButton" Content="Nowy projekt" Click="AddProject_Click" Margin="5" Padding="10,5" Background="LightBlue"/>
-            <Button x:Name="ProjectCardButton" Content="Karta projektu" Click="FilterProjectCards_Click" Margin="5" Padding="10,5" Background="LightGreen"/>
         </StackPanel>
 
         <!-- Lista projektów -->
@@ -67,21 +67,19 @@
 
                                 <StackPanel Margin="10">
                                     <TextBlock Text="Klient:" FontWeight="Bold"/>
-                                    <TextBlock Text="{Binding Client.ClientName}" Margin="0,0,0,10"/>
+                                    <TextBlock Text="{Binding Client.Company}" Margin="0,0,0,10"/>
+
                                     <TextBlock Text="Status:" FontWeight="Bold"/>
                                     <TextBlock Text="{Binding Status}" Margin="0,0,0,10"/>
-                                    <TextBlock Text="Pracownicy:" FontWeight="Bold"/>
-                                    <ItemsControl ItemsSource="{Binding ProjectEmployees}">
-                                        <ItemsControl.ItemTemplate>
-                                            <DataTemplate>
-                                                <TextBlock Text="{Binding Employee.FullName}" Margin="5,0"/>
-                                            </DataTemplate>
-                                        </ItemsControl.ItemTemplate>
-                                    </ItemsControl>
+
+                                    <TextBlock Text="Pracownik:" FontWeight="Bold"/>
+                                    <TextBlock Text="{Binding Recruiter, Converter={StaticResource EmployeeToFullNameConverter}}" Margin="5,0"/>
+
                                     <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
                                         <Button Content="Szczegóły" Click="ViewDetails_Click" CommandParameter="{Binding}" Margin="0,0,10,0"/>
                                     </StackPanel>
                                 </StackPanel>
+
                             </Expander>
                         </Border>
                     </DataTemplate>

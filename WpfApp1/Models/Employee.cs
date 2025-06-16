@@ -13,12 +13,8 @@ namespace WpfApp1.Model
         public string? LastName { get; set; }
         public string? PhoneNumber { get; set; }
         public DateTime? WorkSince { get; set; }
-
         public long PositionId { get; set; }
         public Position Position { get; set; }
-
-        public ICollection<ProjectEmployee> ProjectEmployees { get; set; } = new List<ProjectEmployee>();
-
         public User User { get; set; }
     }
 }

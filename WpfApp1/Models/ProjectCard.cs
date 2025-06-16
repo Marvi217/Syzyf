@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -38,6 +39,9 @@ namespace WpfApp1.Model
         public string WorkModes { get; set; }
         public string WorkingHours { get; set; }
         public string OtherRemarks { get; set; }
+        public bool IsAcceptedDb { get; set; }
+
+        public ProjectCardStatus Status { get; set; }
 
         public ProjectAcceptance ProjectAcceptance { get; set; }
 
@@ -51,17 +55,23 @@ namespace WpfApp1.Model
                        ProjectAcceptance.AcceptedBySupport;
             }
         }
+        [ForeignKey("ClientId")]
         public Client Client { get; set; }
-
-        public long RecruiterId { get; set; }
+        [ForeignKey("RecruiterId")]
+        public long? RecruiterId { get; set; }
         public Employee Recruiter { get; set; }
+        [InverseProperty("ProjectCard")]
+        public List<Notification> Notifications { get; set; }
+
+
     }
 
     public enum ProjectCardStatus
     {
-        Draft = 0,
-        Submitted = 1,
-        Approved = 2,
-        Rejected = 3
+        Processed,
+        Pending,
+        Accepted,
+        Canceled
     }
+
 }

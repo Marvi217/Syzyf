@@ -10,50 +10,98 @@
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="40"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <!-- Pasek menu -->
+        <!-- Menu bar -->
         <local:MenuControl x:Name="TopMenu" Grid.Row="0" />
 
-        <!-- Nagłówek i kontrolki nawigacji -->
-        <StackPanel Orientation="Horizontal" Grid.Row="1" VerticalAlignment="Center" Margin="10">
-            <Button Content="◀" Width="30" Click="PrevWeek_Click"/>
-            <TextBlock x:Name="CurrentMonthYear" FontSize="16" FontWeight="Bold" Margin="10,0" VerticalAlignment="Center"/>
-            <Button Content="▶" Width="30" Click="NextWeek_Click"/>
-            <Button Content="Dodaj spotkanie" Margin="20,0,0,0" Click="NewMeeting_Click"/>
-        </StackPanel>
-
-        <!-- Kalendarz tygodniowy -->
-        <Grid x:Name="CalendarGrid" Grid.Row="2" Margin="10" ShowGridLines="False">
-            <!-- Kolumny: godziny + 7 dni tygodnia -->
+        <!-- Main content -->
+        <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="50"/>
-                <!-- godziny -->
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="250"/>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
+
+            <!-- Left panel - Calendar and Add button -->
+            <StackPanel Grid.Column="0" Margin="10">
+                <Calendar x:Name="SideCalendar" SelectedDatesChanged="SideCalendar_SelectedDatesChanged"/>
+                <Button x:Name="AddMeetingButton" Content="Dodaj spotkanie" Margin="0,10,0,0" Click="NewMeeting_Click" Padding="10,5"/>
+            </StackPanel>
+
+            <!-- Right panel - Weekly plan -->
+            <Grid Grid.Column="1">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <!-- Week navigation -->
+                <StackPanel Orientation="Horizontal" Grid.Row="0" VerticalAlignment="Center" Margin="10">
+                    <Button Content="◀" Width="30" Click="PrevWeek_Click"/>
+                    <TextBlock x:Name="CurrentMonthYear" FontSize="16" FontWeight="Bold" Margin="10,0" VerticalAlignment="Center"/>
+                    <Button Content="▶" Width="30" Click="NextWeek_Click"/>
+                </StackPanel>
+
+                <!-- Weekly calendar grid with vertical scroll -->
+                <ScrollViewer Grid.Row="1" Margin="10" VerticalScrollBarVisibility="Auto">
+                    <Grid x:Name="CalendarGrid" ShowGridLines="False">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="50"/>
+                            <!-- Days of week -->
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                    </Grid>
+                </ScrollViewer>
+            </Grid>
         </Grid>
 
-        <!-- Popup dodawania nowego spotkania -->
+        <!-- Popup for adding new meeting -->
         <Popup x:Name="NewMeetingPopup" Placement="Center" StaysOpen="False" AllowsTransparency="True" PopupAnimation="Fade">
-            <Border Background="White" BorderBrush="Gray" BorderThickness="1" Padding="15" CornerRadius="6" Width="300">
+            <Border Background="White" BorderBrush="Gray" BorderThickness="1" Padding="15" CornerRadius="6" Width="400">
                 <StackPanel>
                     <TextBlock Text="Dodaj nowe spotkanie" FontWeight="Bold" FontSize="14" Margin="0,0,0,10"/>
+
                     <TextBlock Text="Tytuł:"/>
                     <TextBox x:Name="TitleTextBox" Margin="0,0,0,10"/>
+
                     <TextBlock Text="Data:"/>
                     <DatePicker x:Name="MeetingDatePicker" Margin="0,0,0,10"/>
-                    <TextBlock Text="Godzina rozpoczęcia (HH:mm):"/>
-                    <TextBox x:Name="StartTimeTextBox" Text="09:00" Margin="0,0,0,10"/>
-                    <TextBlock Text="Godzina zakończenia (HH:mm):"/>
-                    <TextBox x:Name="EndTimeTextBox" Text="10:00" Margin="0,0,0,10"/>
+
+                    <Grid Margin="0,0,0,10">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="10"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="Godzina rozpoczęcia (HH:mm):"/>
+                            <TextBox x:Name="StartTimeTextBox" Text="09:00"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Text="Godzina zakończenia (HH:mm):"/>
+                            <TextBox x:Name="EndTimeTextBox" Text="10:00"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <TextBlock Text="Uczestnicy:"/>
+                    <ListBox x:Name="ParticipantsListBox" Height="150" Margin="0,0,0,10" SelectionMode="Multiple">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="{Binding Name}" Margin="0,0,5,0"/>
+                                    <TextBlock Text="{Binding Type}" Foreground="Gray" FontSize="11"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
                         <Button Content="Anuluj" Width="70" Margin="0,0,10,0" Click="CancelMeeting_Click"/>
                         <Button Content="Zapisz" Width="70" Click="SaveMeeting_Click"/>

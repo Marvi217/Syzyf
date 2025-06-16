@@ -38,7 +38,7 @@ namespace WpfApp1.Models
         public string WorkingHours { get; set; }
         public string OtherRemarks { get; set; }
         public ProjectStatus Status { get; set; }
-        public long RecruiterId { get; set; }
+        public long? RecruiterId { get; set; }
 
         public ProjectCard ProjectCard { get; set; }
         public Client Client { get; set; }
@@ -53,7 +53,6 @@ namespace WpfApp1.Models
     }
     public enum ProjectStatus
     {
-        Planned,
         InProgress,
         Completed
     }

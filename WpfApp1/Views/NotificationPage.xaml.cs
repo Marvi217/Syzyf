@@ -313,15 +313,18 @@ namespace WpfApp1.Views
             {
                 try
                 {
-                    var project = await _context.ProjectCards.FindAsync(notif.ProjectCardId);
+                    var card = await _context.ProjectCards
+                        .Include(pc => pc.Client)
+                            .ThenInclude(c => c.User)
+                        .FirstOrDefaultAsync(pc => pc.Id == notif.ProjectCardId.Value);
 
-                    if (project == null)
+                    if (card == null)
                     {
                         MessageBox.Show("Nie znaleziono projektu o podanym Id.", "Błąd", MessageBoxButton.OK, MessageBoxImage.Warning);
                         return;
                     }
 
-                    var detailsPage = new ProjectDetailsPage(_mainFrame, _user, _context, project);
+                    var detailsPage = new ProjectDetailsPage(_mainFrame, _user, _context, card);
                     _mainFrame.Navigate(detailsPage);
                 }
                 catch (Exception ex)

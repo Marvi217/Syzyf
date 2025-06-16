@@ -14,8 +14,6 @@ namespace WpfApp1.Converters
             {
                 switch (status)
                 {
-                    case ProjectStatus.Planned:
-                        return Brushes.LightYellow;
                     case ProjectStatus.InProgress:
                         return Brushes.LightGreen;
                     case ProjectStatus.Completed:

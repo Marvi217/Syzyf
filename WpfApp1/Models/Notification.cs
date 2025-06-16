@@ -43,5 +43,8 @@ namespace WpfApp1.Model
 
         [Column("is_read")]
         public bool IsRead { get; set; }
+        [Column("created_at")]
+        public DateTime CreatedAt { get; set; }
+
     }
 }

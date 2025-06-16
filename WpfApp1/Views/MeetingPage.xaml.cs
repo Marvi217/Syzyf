@@ -8,6 +8,7 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using WpfApp1.Data;
 using WpfApp1.Model;
+using WpfApp1.Models;
 
 namespace WpfApp1.Views
 {
@@ -18,6 +19,7 @@ namespace WpfApp1.Views
         private readonly SyzyfContext _context;
         private DateTime _currentWeekStart;
         private List<Meeting> _weeklyMeetings;
+        private List<ParticipantItem> _availableParticipants;
 
         // Kolory dla różnych typów spotkań
         private readonly Brush[] _meetingColors =
@@ -40,7 +42,50 @@ namespace WpfApp1.Views
 
             // Ustaw aktualny tydzień na podstawie wybranej daty
             _currentWeekStart = GetWeekStart(selectedDate);
+            SideCalendar.SelectedDate = selectedDate;
+            if (_user.Employee == null)
+            {
+                AddMeetingButton.Visibility = Visibility.Collapsed;
+            }
+            LoadAvailableParticipants();
             UpdateCalendarView();
+        }
+
+        private void LoadAvailableParticipants()
+        {
+            _availableParticipants = new List<ParticipantItem>();
+
+            // Add employees
+            var employees = _context.Employees.ToList();
+            _availableParticipants.AddRange(employees.Select(e => new ParticipantItem
+            {
+                Id = e.Id,
+                Name = $"{e.FirstName} {e.LastName}",
+                Type = "(Pracownik)",
+                Entity = e
+            }));
+
+            // Add candidates
+            var candidates = _context.Candidates.ToList();
+            _availableParticipants.AddRange(candidates.Select(c => new ParticipantItem
+            {
+                Id = c.Id,
+                Name = $"{c.FirstName} {c.LastName}",
+                Type = "(Kandydat)",
+                Entity = c
+            }));
+
+            // Add clients
+            var clients = _context.Clients.ToList();
+            _availableParticipants.AddRange(clients.Select(c => new ParticipantItem
+            {
+                Id = c.Id,
+                Name = c.Company,
+                Type = "(Klient)",
+                Entity = c
+            }));
+
+            ParticipantsListBox.ItemsSource = _availableParticipants;
         }
 
         private DateTime GetWeekStart(DateTime date)
@@ -54,11 +99,16 @@ namespace WpfApp1.Views
             LoadWeeklyMeetings();
             UpdateMonthYearDisplay();
             BuildCalendarGrid();
+            AddMeetingsToGrid();
         }
 
         private void LoadWeeklyMeetings()
         {
             DateTime weekEnd = _currentWeekStart.AddDays(7).AddTicks(-1);
+
+            long? employeeId = _user.Employee?.Id;
+            long? candidateId = _user.Candidate?.Id;
+            long? clientId = _user.Client?.Id;
 
             _weeklyMeetings = _context.Meetings
                 .Include(m => m.Participants)
@@ -67,11 +117,16 @@ namespace WpfApp1.Views
                     .ThenInclude(p => p.Candidate)
                 .Include(m => m.Participants)
                     .ThenInclude(p => p.Client)
-                .Where(m => m.StartTime >= _currentWeekStart && m.StartTime <= weekEnd)
+                .Where(m => m.StartTime >= _currentWeekStart && m.StartTime <= weekEnd
+                            && m.Participants.Any(p =>
+                                (employeeId != null && p.EmployeeId == employeeId) ||
+                                (candidateId != null && p.CandidateId == candidateId) ||
+                                (clientId != null && p.ClientId == clientId)
+                            ))
                 .OrderBy(m => m.StartTime)
                 .ToList();
-
         }
+
 
         private void UpdateMonthYearDisplay()
         {
@@ -85,12 +140,38 @@ namespace WpfApp1.Views
             CalendarGrid.Children.Clear();
             CalendarGrid.RowDefinitions.Clear();
 
-            // Tworzenie wierszy dla godzin (6:00 - 22:00)
-            for (int hour = 6; hour <= 22; hour++)
+            // Dodaj osobny wiersz na nagłówki dni tygodnia
+            CalendarGrid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+
+            // Dodaj wiersze dla godzin (8:00 - 18:00)
+            for (int hour = 8; hour <= 18; hour++)
             {
                 CalendarGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(60) });
+            }
 
-                // Etykieta godziny
+            // Nagłówki dni tygodnia
+            var daysOfWeek = new[] { "Poniedziałek", "Wtorek", "Środa", "Czwartek", "Piątek", "Sobota", "Niedziela" };
+            for (int i = 0; i < daysOfWeek.Length; i++)
+            {
+                var dayHeader = new TextBlock
+                {
+                    Text = daysOfWeek[i],
+                    FontWeight = FontWeights.Bold,
+                    HorizontalAlignment = HorizontalAlignment.Center,
+                    VerticalAlignment = VerticalAlignment.Center,
+                    Margin = new Thickness(5),
+                    FontSize = 14,
+                    Foreground = new SolidColorBrush(Colors.DarkSlateGray)
+                };
+                Grid.SetColumn(dayHeader, i + 1);  // Kolumny 1-7
+                Grid.SetRow(dayHeader, 0);        // Wiersz 0 (nagłówki)
+                CalendarGrid.Children.Add(dayHeader);
+            }
+
+            // Etykiety godzin i komórki kalendarza
+            for (int hour = 8; hour <= 18; hour++)
+            {
+                // Etykieta godziny (lewa kolumna)
                 var timeLabel = new TextBlock
                 {
                     Text = $"{hour:00}:00",
@@ -98,40 +179,40 @@ namespace WpfApp1.Views
                     HorizontalAlignment = HorizontalAlignment.Center,
                     FontSize = 12,
                     Foreground = new SolidColorBrush(Colors.Gray),
-                    Margin = new Thickness(0, 5, 0, 0)
+                    Margin = new Thickness(5, 10, 5, 0)
                 };
                 Grid.SetColumn(timeLabel, 0);
-                Grid.SetRow(timeLabel, hour - 6);
+                Grid.SetRow(timeLabel, hour - 7);  // Wiersze 1-11
                 CalendarGrid.Children.Add(timeLabel);
 
-                // Linie poziome
+                // Komórki kalendarza
                 for (int day = 1; day <= 7; day++)
                 {
                     var border = new Border
                     {
                         BorderBrush = new SolidColorBrush(Color.FromRgb(225, 229, 233)),
                         BorderThickness = new Thickness(0, 0, 1, 1),
-                        Background = new SolidColorBrush(Colors.White)
+                        Background = new SolidColorBrush(Colors.White),
+                        Margin = new Thickness(1)
                     };
                     Grid.SetColumn(border, day);
-                    Grid.SetRow(border, hour - 6);
+                    Grid.SetRow(border, hour - 7);  // Wiersze 1-11
                     CalendarGrid.Children.Add(border);
                 }
             }
-
-            // Dodawanie spotkań do siatki
-            AddMeetingsToGrid();
         }
 
         private void AddMeetingsToGrid()
         {
             foreach (var meeting in _weeklyMeetings)
             {
+                if (meeting.StartTime.Value.Hour < 8 || meeting.StartTime.Value.Hour >= 18)
+                    continue;
+
                 var meetingBlock = CreateMeetingBlock(meeting);
 
                 int dayColumn = ((int)meeting.StartTime.Value.DayOfWeek + 6) % 7 + 1;
-                int hourRow = meeting.StartTime.Value.Hour - 6;
-
+                int hourRow = meeting.StartTime.Value.Hour - 7;
 
                 if (hourRow >= 0 && hourRow < CalendarGrid.RowDefinitions.Count)
                 {
@@ -223,24 +304,32 @@ namespace WpfApp1.Views
             MessageBox.Show(details, "Szczegóły spotkania", MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
-
-
         private void PrevWeek_Click(object sender, RoutedEventArgs e)
         {
             _currentWeekStart = _currentWeekStart.AddDays(-7);
+            SideCalendar.SelectedDate = _currentWeekStart;
             UpdateCalendarView();
         }
 
         private void NextWeek_Click(object sender, RoutedEventArgs e)
         {
             _currentWeekStart = _currentWeekStart.AddDays(7);
+            SideCalendar.SelectedDate = _currentWeekStart;
             UpdateCalendarView();
+        }
+
+        private void SideCalendar_SelectedDatesChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (SideCalendar.SelectedDate.HasValue)
+            {
+                _currentWeekStart = GetWeekStart(SideCalendar.SelectedDate.Value);
+                UpdateCalendarView();
+            }
         }
 
         private void NewMeeting_Click(object sender, RoutedEventArgs e)
         {
-            // Ustaw domyślną datę na dziś lub pierwszy dzień aktualnego tygodnia
-            MeetingDatePicker.SelectedDate = DateTime.Today;
+            MeetingDatePicker.SelectedDate = SideCalendar.SelectedDate ?? DateTime.Today;
             NewMeetingPopup.IsOpen = true;
         }
 
@@ -266,6 +355,14 @@ namespace WpfApp1.Views
                 return;
             }
 
+            // Sprawdź czy spotkanie jest w godzinach 8:00-18:00
+            if (startTime.Hours < 8 || startTime.Hours >= 18 ||
+                endTime.Hours < 8 || endTime.Hours > 18 ||
+                (endTime.Hours == 18 && endTime.Minutes > 0))
+            {
+                MessageBox.Show("Spotkania mogą się odbywać tylko w godzinach 8:00-18:00.", "Błąd walidacji");
+                return;
+            }
 
             if (endTime <= startTime)
             {
@@ -281,8 +378,29 @@ namespace WpfApp1.Views
                 {
                     Title = TitleTextBox.Text.Trim(),
                     StartTime = meetingDate + startTime,
-                    EndTime = meetingDate + endTime, 
+                    EndTime = meetingDate + endTime,
                 };
+
+                // Add selected participants
+                foreach (ParticipantItem selected in ParticipantsListBox.SelectedItems)
+                {
+                    var participant = new MeetingParticipant();
+
+                    if (selected.Entity is Employee employee)
+                    {
+                        participant.EmployeeId = employee.Id;
+                    }
+                    else if (selected.Entity is Candidate candidate)
+                    {
+                        participant.CandidateId = candidate.Id;
+                    }
+                    else if (selected.Entity is Client client)
+                    {
+                        participant.ClientId = client.Id;
+                    }
+
+                    newMeeting.Participants.Add(participant);
+                }
 
                 _context.Meetings.Add(newMeeting);
                 _context.SaveChanges();
@@ -298,7 +416,6 @@ namespace WpfApp1.Views
                 MessageBox.Show($"Błąd podczas zapisywania: {ex.Message}", "Błąd", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-
 
         private bool ValidateForm()
         {
@@ -335,12 +452,13 @@ namespace WpfApp1.Views
             MeetingDatePicker.SelectedDate = null;
             StartTimeTextBox.Text = "09:00";
             EndTimeTextBox.Text = "10:00";
+            ParticipantsListBox.SelectedItems.Clear();
         }
 
-        // Metoda publiczna do ustawiania konkretnego tygodnia (np. z głównego kalendarza)
         public void NavigateToWeek(DateTime date)
         {
             _currentWeekStart = GetWeekStart(date);
+            SideCalendar.SelectedDate = date;
             UpdateCalendarView();
         }
     }

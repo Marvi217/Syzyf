@@ -55,8 +55,88 @@ namespace WpfApp1.Views
             ProjectCards = new ObservableCollection<ProjectCard>();
 
             this.Loaded += ProjectPage_Loaded;
-
             DataContext = this;
+        }
+
+        private async Task CheckClientAcceptanceDelaysAsync()
+        {
+            try
+            {
+                var cards = await _context.ProjectCards
+                    .Include(pc => pc.ProjectAcceptance)
+                    .Include(pc => pc.Client)
+                    .Include(pc => pc.Recruiter)
+                    .Include(pc => pc.Notifications)
+                    .Where(pc => pc.Status == ProjectCardStatus.Processed)
+                    .ToListAsync();
+
+                foreach (var card in cards)
+                {
+                    var acceptance = card.ProjectAcceptance;
+                    var latestNotification = card.Notifications
+                        .Where(n => n.Tag == "ProjectSubmission")
+                        .OrderByDescending(n => n.CreatedAt)
+                        .FirstOrDefault();
+
+                    if (acceptance == null || latestNotification == null)
+                        continue;
+
+                    if (acceptance.AcceptedByClient)
+                        continue;
+
+                    var daysPassed = (DateTime.Now - latestNotification.CreatedAt).TotalDays;
+
+                    // 3 dni – przypomnienie klientowi
+                    if (daysPassed > 3 && !card.Notifications.Any(n => n.Tag == "Reminder3"))
+                    {
+                        var reminderToClient = new Notification
+                        {
+                            Title = "Przypomnienie o akceptacji projektu",
+                            Message = "Prosimy o zaakceptowanie projektu.",
+                            Tag = "Reminder3",
+                            ProjectCardId = card.Id,
+                            FromId = _user.Id,
+                            ToId = card.Client.User.Id,
+                            IsRead = false,
+                            CreatedAt = DateTime.Now
+                        };
+                        _context.Notifications.Add(reminderToClient);
+                    }
+
+                    // 6 dni – powiadomienie wsparcia
+                    if (daysPassed > 6 && !card.Notifications.Any(n => n.Tag == "Reminder6"))
+                    {
+                        var support = card.ProjectAcceptance?.SupportId;
+                        if (support != null)
+                        {
+                            var reminderToSupport = new Notification
+                            {
+                                Title = "Brak akceptacji projektu przez klienta",
+                                Message = $"Skontaktuj się z klientem w sprawie akceptacji projektu: {card.Id}.",
+                                Tag = "Reminder6",
+                                ProjectCardId = card.Id,
+                                FromId = _user.Id,
+                                ToId = support.Value,
+                                IsRead = false,
+                                CreatedAt = DateTime.Now
+                            };
+                            _context.Notifications.Add(reminderToSupport);
+                        }
+                    }
+
+                    // 15 dni – anuluj kartę
+                    if (daysPassed > 15)
+                    {
+                        card.Status = ProjectCardStatus.Canceled;
+                    }
+                }
+
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                //Nic nie rób, błędy są ignorowane, ponieważ to tylko przypomnienia
+            }
         }
 
         private async void ProjectPage_Loaded(object sender, RoutedEventArgs e)
@@ -94,6 +174,7 @@ namespace WpfApp1.Views
 
                 await LoadProjectsAsync();
                 await LoadProjectCardsAsync();
+                await CheckClientAcceptanceDelaysAsync();
                 ApplyFilter(); // Zastosuj domyślny filtr po załadowaniu danych
             }
             catch (Exception ex)
@@ -127,6 +208,14 @@ namespace WpfApp1.Views
                         .Where(pc => pc.RecruiterId == _user.EmployeeId.Value)
                         .ToListAsync();
                 }
+                else if (_user.ClientId != null)
+                {
+                    cards = await _context.ProjectCards
+                        .Include(pc => pc.Client)
+                        .Include(pc => pc.Recruiter)
+                        .Where(pc => pc.ClientId == _user.ClientId.Value)
+                        .ToListAsync();
+                }
                 else
                 {
                     // Pozostali nie widzą kart
@@ -144,44 +233,37 @@ namespace WpfApp1.Views
             }
         }
 
-
         private async Task LoadProjectsAsync()
         {
             try
             {
-                List<Project> projects;
+                List<Project> projects = new List<Project>();
 
                 if (_user.EmployeeId != null)
                 {
-                    // Rekruter widzi tylko swoje projekty (przez ProjectCard)
-                    projects = await _context.Projects
-                        .Include(p => p.Client)
-                        .Include(p => p.ProjectCard)
-                        .Where(p => p.ProjectCard.RecruiterId == _user.EmployeeId.Value)
-                        .ToListAsync();
-                }
-                else if (_user.Employee != null && _user.Employee.Position != null &&
-                         _user.Employee.Position.PositionName == "Wsparcie")
-                {
-                    // Wsparcie widzi wszystkie projekty
-                    projects = await _context.Projects
-                        .Include(p => p.Client)
-                        .Include(p => p.ProjectCard)
-                        .ToListAsync();
+                    if (_user.Employee?.Position?.PositionName == "Rekruter")
+                    {
+                        projects = await _context.Projects
+                            .Include(p => p.Client)
+                            .Include(p => p.ProjectCard)
+                            .Where(p => p.ProjectCard.RecruiterId == _user.EmployeeId.Value)
+                            .ToListAsync();
+                    }
+                    else if (_user.Employee?.Position?.PositionName == "Wsparcie")
+                    {
+                        projects = await _context.Projects
+                            .Include(p => p.Client)
+                            .Include(p => p.ProjectCard)
+                            .ToListAsync();
+                    }
                 }
                 else if (_user.ClientId != null)
                 {
-                    // Klient widzi tylko swoje projekty
                     projects = await _context.Projects
                         .Include(p => p.Client)
                         .Include(p => p.ProjectCard)
                         .Where(p => p.ClientId == _user.ClientId.Value)
                         .ToListAsync();
-                }
-                else
-                {
-                    // Domyślnie pusta lista
-                    projects = new List<Project>();
                 }
 
                 Projects.Clear();
@@ -191,8 +273,9 @@ namespace WpfApp1.Views
             catch (Exception ex)
             {
                 MessageBox.Show($"Błąd podczas ładowania projektów: {ex.Message}",
-                              "Błąd", MessageBoxButton.OK, MessageBoxImage.Error);
+                                "Błąd", MessageBoxButton.OK, MessageBoxImage.Error);
             }
+
         }
 
         private void ApplyFilter()
@@ -202,7 +285,7 @@ namespace WpfApp1.Views
                 FilteredProjects.Clear();
                 FilteredProjectCards?.Clear();
 
-                if (_currentFilter == "ProjectCards")
+                if (_currentFilter == "Planned")
                 {
                     ProjectsListView.Visibility = Visibility.Collapsed;
                     ProjectCardsListView.Visibility = Visibility.Visible;
@@ -220,9 +303,6 @@ namespace WpfApp1.Views
 
                     switch (_currentFilter)
                     {
-                        case "Planned":
-                            filtered = Projects.Where(p => p.Status == ProjectStatus.Planned);
-                            break;
                         case "Active":
                             filtered = Projects.Where(p => p.Status == ProjectStatus.InProgress);
                             break;
@@ -271,12 +351,6 @@ namespace WpfApp1.Views
         private void FilterMy_Click(object sender, RoutedEventArgs e)
         {
             _currentFilter = "My";
-            ApplyFilter();
-        }
-
-        private void FilterProjectCards_Click(object sender, RoutedEventArgs e)
-        {
-            _currentFilter = "ProjectCards";
             ApplyFilter();
         }
 

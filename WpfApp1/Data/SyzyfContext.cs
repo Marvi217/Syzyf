@@ -16,7 +16,6 @@ namespace WpfApp1.Data
         public DbSet<Project> Projects { get; set; }
         public DbSet<ProjectCard> ProjectCards { get; set; }
         public DbSet<ProjectCardVersion> ProjectCardVersions { get; set; }
-        public DbSet<ProjectEmployee> ProjectEmployees { get; set; }
         public DbSet<RecruitmentMeeting> RecruitmentMeetings { get; set; }
         public DbSet<Notification> Notifications { get; set; }
         public DbSet<ProjectAcceptance> ProjectAcceptances { get; set; }
@@ -38,7 +37,6 @@ namespace WpfApp1.Data
             modelBuilder.Entity<Project>().ToTable("projects");
             modelBuilder.Entity<ProjectCard>().ToTable("project_cards");
             modelBuilder.Entity<ProjectCardVersion>().ToTable("project_card_version");
-            modelBuilder.Entity<ProjectEmployee>().ToTable("projects-employees");
             modelBuilder.Entity<RecruitmentMeeting>().ToTable("recruitmentmeetings");
             modelBuilder.Entity<Notification>().ToTable("notification");
             modelBuilder.Entity<Evaluation>().ToTable("evaluation");
@@ -56,7 +54,6 @@ namespace WpfApp1.Data
             modelBuilder.Entity<Project>().HasKey(p => p.Id);
             modelBuilder.Entity<ProjectCard>().HasKey(pc => pc.Id);
             modelBuilder.Entity<ProjectCardVersion>().HasKey(c => c.Id);
-            modelBuilder.Entity<ProjectEmployee>().HasKey(pe => pe.Id);
             modelBuilder.Entity<RecruitmentMeeting>().HasKey(rm => rm.Id);
             modelBuilder.Entity<Evaluation>().HasKey(ev => ev.Id);
             modelBuilder.Entity<Invoice>().HasKey(i => i.Id);
@@ -149,10 +146,12 @@ namespace WpfApp1.Data
                 entity.Property(p => p.RecruiterId).HasColumnName("recruiter_id");
 
                 entity.Property(p => p.Status)
-                      .HasColumnName("status")
-                      .HasConversion(
-                          v => v.ToString(),
-                          v => string.IsNullOrEmpty(v) ? ProjectStatus.Planned : (ProjectStatus)Enum.Parse(typeof(ProjectStatus), v));
+                  .HasColumnName("status")
+                  .HasConversion(
+                    v => v.ToString(),
+                    v => (ProjectStatus)Enum.Parse(typeof(ProjectStatus), v));
+
+
 
                 entity.HasOne(p => p.Client)
                       .WithMany(c => c.Projects)
@@ -194,6 +193,12 @@ namespace WpfApp1.Data
                 entity.Property(pc => pc.WorkingHours).HasColumnName("working_hours").HasMaxLength(255).IsRequired(false);
                 entity.Property(pc => pc.OtherRemarks).HasColumnName("other_remarks").IsRequired(false);
                 entity.Property(pc => pc.RecruiterId).HasColumnName("recruiter_id");
+                entity.Property(pc => pc.IsAcceptedDb).HasColumnName("is_accepted");
+
+                modelBuilder.Entity<ProjectCard>()
+                .Property(e => e.Status)
+                .HasConversion<string>();
+
 
                 entity.HasOne(pc => pc.Client)
                       .WithMany(c => c.ProjectCards)
@@ -221,13 +226,6 @@ namespace WpfApp1.Data
                 entity.Property(pcv => pcv.CreatedAt).HasColumnName("created_at");  
             });
 
-
-            modelBuilder.Entity<ProjectEmployee>(entity =>
-            {
-                entity.Property(pe => pe.Id).HasColumnName("id");
-                entity.Property(pe => pe.EmployeeId).HasColumnName("employee_id");
-                entity.Property(pe => pe.ProjectId).HasColumnName("project_id");
-            });
 
             modelBuilder.Entity<Meeting>(entity =>
             {
@@ -296,6 +294,7 @@ namespace WpfApp1.Data
                 entity.Property(n => n.ToId).HasColumnName("msg_to");
                 entity.Property(n => n.IsRead).HasColumnName("is_read");
                 entity.Property(n => n.OrderId).HasColumnName("order_id");
+                entity.Property(n => n.CreatedAt).HasColumnName("created_at");
             });
 
             modelBuilder.Entity<ProjectAcceptance>(entity =>
@@ -352,10 +351,9 @@ namespace WpfApp1.Data
 
             modelBuilder.Entity<Notification>()
                 .HasOne(n => n.ProjectCard)
-                .WithMany()
+                .WithMany(pc => pc.Notifications)
                 .HasForeignKey(n => n.ProjectCardId)
                 .HasConstraintName("notification_ibfk_1");
-
 
 
             modelBuilder.Entity<MeetingParticipant>()
@@ -422,12 +420,6 @@ namespace WpfApp1.Data
                 .WithMany(c => c.Projects)
                 .HasForeignKey(p => p.ClientId)
                 .HasConstraintName("FKksdiyuily2f4ca2y53k07pmq");
-
-            modelBuilder.Entity<ProjectEmployee>()
-                .HasOne(pe => pe.Employee)
-                .WithMany(e => e.ProjectEmployees)
-                .HasForeignKey(pe => pe.EmployeeId)
-                .HasConstraintName("FKdid31jlghyg4721cyyulaue8h");
 
             modelBuilder.Entity<RecruitmentMeeting>()
                 .HasOne(rm => rm.Candidate)

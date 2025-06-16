@@ -18,6 +18,7 @@ namespace WpfApp1.Views
         private readonly User _user;
         private readonly SyzyfContext _context;
         private readonly IProjectBase _projectData;
+        private readonly ProjectCard _projectCardData;
         private readonly Project _projectForActions;
 
         public ProjectDetailsPage(Frame mainFrame, User user, SyzyfContext context, ProjectCard card)
@@ -28,6 +29,7 @@ namespace WpfApp1.Views
             _user = user;
             _context = context;
             _projectData = card;
+            _projectCardData = card;
             _projectForActions = null;
 
             InitializeUI();
@@ -52,10 +54,21 @@ namespace WpfApp1.Views
 
             if (_user?.EmployeeId == null)
             {
-                AcceptButton.Visibility = Visibility.Collapsed;
-                RejectButton.Visibility = Visibility.Collapsed;
-                EditButton.Visibility = Visibility.Collapsed;  // brak pracownika = brak edycji
-                AssignRecruiterButton.Visibility = Visibility.Collapsed;
+                if (_projectForActions != null && _projectForActions.Status.Equals(ProjectStatus.InProgress))
+                {
+                    EditButton.Visibility = Visibility.Collapsed;
+                    RejectButton.Visibility = Visibility.Collapsed;
+                    AcceptButton.Visibility = Visibility.Collapsed;
+                    AcceptButton2.Visibility = Visibility.Collapsed;
+                }
+                else
+                {
+                    AcceptButton2.Visibility = Visibility.Collapsed;
+                    AcceptButton.Visibility = Visibility.Visible;
+                    RejectButton.Visibility = Visibility.Collapsed;
+                    EditButton.Visibility = Visibility.Collapsed;
+                    AssignRecruiterButton.Visibility = Visibility.Collapsed;
+                }
             }
             else
             {
@@ -69,24 +82,46 @@ namespace WpfApp1.Views
                 }
                 else if (positionName == "Rekruter")
                 {
+                    if (_projectData is ProjectCard recruiterCard && recruiterCard.RecruiterId == null)
+                    {
+                        AcceptButton2.Visibility = Visibility.Visible;
+                        AcceptButton.Visibility = Visibility.Collapsed;
+                        EditButton.Visibility = Visibility.Visible;
+                    }
+                    else
+                    {
+                        AcceptButton.Visibility = Visibility.Visible;
+                        AcceptButton2.Visibility = Visibility.Collapsed;
+                        if (_projectCardData != null && _projectCardData.IsAcceptedDb)
+                        {
+                            EditButton.Visibility = Visibility.Collapsed;
+                            RejectButton.Visibility = Visibility.Collapsed;
+                        }
+                        else
+                        {
+                            EditButton.Visibility = Visibility.Visible;
+                        }
+                    }
                     AssignRecruiterButton.Visibility = Visibility.Collapsed;
-                    EditButton.Visibility = Visibility.Visible; // Tylko dla rekrutera widoczny edytuj
                 }
                 else
                 {
                     EditButton.Visibility = Visibility.Collapsed;
+                    AcceptButton2.Visibility = Visibility.Collapsed;
                 }
 
                 bool isAcceptedBySupport = false;
-                if (_projectData is ProjectCard card)
+                bool isAcceptedByRecruiter = false;
+                if (_projectData is ProjectCard projectCard)
                 {
                     var acceptance = await _context.ProjectAcceptances
-                        .FirstOrDefaultAsync(pa => pa.ProjectCardId == card.Id);
+                        .FirstOrDefaultAsync(pa => pa.ProjectCardId == projectCard.Id);
 
                     isAcceptedBySupport = acceptance?.AcceptedBySupport == true;
+                    isAcceptedByRecruiter = acceptance?.AcceptedByRecruiter == true;
 
                     // Sprawdź czy rekruter jest przydzielony - jeśli recruiterId jest ustawiony
-                    bool recruiterAssigned = card.RecruiterId != null && card.RecruiterId != 0;
+                    bool recruiterAssigned = projectCard.RecruiterId != null && projectCard.RecruiterId != 0;
 
                     if (recruiterAssigned && _user.Employee.Position.PositionName == "Wsparcie")
                     {
@@ -99,8 +134,11 @@ namespace WpfApp1.Views
                         };
                         DetailsContainer.Children.Add(assignedText);
                     }
+                    else
+                    {
+                        EditButton.Visibility = Visibility.Collapsed;
+                    }
                 }
-
 
                 if (isAcceptedBySupport && positionName == "Wsparcie")
                 {
@@ -112,9 +150,19 @@ namespace WpfApp1.Views
                 {
                     AssignRecruiterButton.Visibility = Visibility.Collapsed;
                 }
+                if (_projectCardData != null && isAcceptedByRecruiter == true)
+                {
+                    AcceptButton2.Visibility = Visibility.Collapsed;
+                    AcceptButton.Visibility = Visibility.Collapsed;
+                }
+                if (_projectForActions != null && _projectForActions.Status.Equals(ProjectStatus.InProgress))
+                {
+                    EditButton.Visibility = Visibility.Collapsed;
+                    RejectButton.Visibility = Visibility.Collapsed;
+                    AcceptButton.Visibility = Visibility.Collapsed;
+                    AcceptButton2.Visibility = Visibility.Collapsed;
+                }
             }
-
-            
 
             DisplayDetails();
         }
@@ -209,7 +257,7 @@ namespace WpfApp1.Views
         }
         private async void Accept_Click(object sender, RoutedEventArgs e)
         {
-            if (_user?.EmployeeId == null || _projectData is not ProjectCard card) return;
+            if (_projectData is not ProjectCard card) return;
 
             using var transaction = await _context.Database.BeginTransactionAsync();
 
@@ -238,7 +286,7 @@ namespace WpfApp1.Views
                     projectAcceptance.AcceptedBySupport = true;
                     projectAcceptance.SupportAcceptedAt = DateTime.Now;
                 }
-                else if (positionName == "Handlowiec" && !projectAcceptance.AcceptedByRecruiter)
+                else if (positionName == "Rekruter" && !projectAcceptance.AcceptedByRecruiter)
                 {
                     projectAcceptance.AcceptedByRecruiter = true;
                     projectAcceptance.RecruiterAcceptedAt = DateTime.Now;
@@ -278,6 +326,8 @@ namespace WpfApp1.Views
                             IsRead = false
                         };
                         _context.Notifications.Add(notification);
+                        card.Status = ProjectCardStatus.Processed;
+                        _context.ProjectCards.Update(card);
                         await _context.SaveChangesAsync();
                     }
                 }
@@ -296,10 +346,14 @@ namespace WpfApp1.Views
                 // Sprawdź czy karta jest w pełni zaakceptowana
                 if (cardInDb.IsAccepted)
                 {
-                    bool projectExists = await _context.Projects
-                        .AnyAsync(p => p.ClientId == cardInDb.ClientId && p.JobTitle == cardInDb.JobTitle);
+                    cardInDb.IsAcceptedDb = true;
+                    cardInDb.Status = ProjectCardStatus.Accepted;
+                    _context.ProjectCards.Update(cardInDb);
 
-                    if (!projectExists && positionName == "Wsparcie")
+                    bool projectExists = await _context.Projects
+                        .AnyAsync(p => p.ClientId == cardInDb.ClientId && p.JobTitle == cardInDb.JobTitle && p.RecruiterId == cardInDb.RecruiterId);
+
+                    if (!projectExists)
                     {
                         var newProject = new Project
                         {
@@ -331,19 +385,12 @@ namespace WpfApp1.Views
                             WorkModes = cardInDb.WorkModes,
                             WorkingHours = cardInDb.WorkingHours,
                             OtherRemarks = cardInDb.OtherRemarks,
-                            Status = ProjectStatus.Planned,
+                            Status = ProjectStatus.InProgress,
+                            RecruiterId = cardInDb.RecruiterId,
                             ProjectCardId = cardInDb.Id
                         };
 
                         _context.Projects.Add(newProject);
-                        await _context.SaveChangesAsync();
-
-                        _context.ProjectEmployees.Add(new ProjectEmployee
-                        {
-                            ProjectId = newProject.Id,
-                            EmployeeId = _user.EmployeeId.Value
-                        });
-
                         await _context.SaveChangesAsync();
                     }
                 }
@@ -367,6 +414,70 @@ namespace WpfApp1.Views
             }
         }
 
+        private async void Accept_Click2(object sender, RoutedEventArgs e)
+        {
+            if (_user?.EmployeeId == null || _projectData is not ProjectCard card) return;
+
+            using var transaction = await _context.Database.BeginTransactionAsync();
+
+            try
+            {
+                card.RecruiterId = _user.EmployeeId;
+                _context.ProjectCards.Update(card);
+
+                var message = $"Dzień dobry, jestem {_user.Employee.FirstName} {_user.Employee.LastName}. Będę prowadził tę kartę projektu: {card.JobTitle}.";
+                var notification = new Notification
+                {
+                    FromId = _user.Id,
+                    ToId = card.Client.User.Id,
+                    Title = "Przydzielenie karty projektu",
+                    Message = message,
+                    Tag = "projectAssignmentReplay",
+                    ProjectCardId = card.Id,
+                    IsRead = false
+                };
+                _context.Notifications.Add(notification);
+                var users = await (
+                    from u in _context.Users
+                    join n in _context.Notifications
+                        on u.EmployeeId equals n.FromId
+                    where n.ProjectCardId == card.Id && u.EmployeeId != null
+                    select u
+                )
+                .Include(u => u.Employee)
+                .FirstOrDefaultAsync();
+
+                var notification2 = new Notification
+                {
+                    FromId = _user.Id,
+                    ToId = users.Id,
+                    Title = "Przydzielenie karty projektu",
+                    Message = message,
+                    Tag = "projectAssignmentReplay",
+                    ProjectCardId = card.Id,
+                    IsRead = false
+                };
+                _context.Notifications.Add(notification2);
+                await _context.SaveChangesAsync();
+
+                _mainFrame.GoBack();
+
+                await transaction.CommitAsync();
+
+                MessageBox.Show("Przyjęto kartę projektu.", "Sukces", MessageBoxButton.OK, MessageBoxImage.Information);
+
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                await transaction.RollbackAsync();
+                MessageBox.Show("Dane zostały zmienione przez innego użytkownika. Proszę odświeżyć i spróbować ponownie.", "Konflikt danych", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                MessageBox.Show($"Błąd podczas zapisu: {ex.Message}", "Błąd", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
 
         private void RefreshUIAfterAcceptance(ProjectAcceptance acceptance)
         {
@@ -414,12 +525,12 @@ namespace WpfApp1.Views
                 {
                     if (_projectData.RecruiterId == _user.EmployeeId ||_user.Employee.Position.PositionName == "Admin")
                     {
-                        _mainFrame.Navigate(new ProjectCardFormPage(_mainFrame, _user, _context, _projectForActions));
+                        _mainFrame.Navigate(new ProjectCardFormPage(_mainFrame, _user, _context, _projectCardData));
                     }
                 }
                 else if(isClient != 0)
                 {
-                    _mainFrame.Navigate(new ProjectCardFormPage(_mainFrame, _user, _context, _projectForActions));
+                    _mainFrame.Navigate(new ProjectCardFormPage(_mainFrame, _user, _context, _projectCardData));
                 }
                 else
                 {

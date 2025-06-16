@@ -37,7 +37,7 @@ namespace WpfApp1.Model
         string WorkingHours { get; }
         string OtherRemarks { get; }
         public long ClientId { get; set; }
-        public long RecruiterId { get; set; }
+        public long? RecruiterId { get; set; }
     }
 }
 
