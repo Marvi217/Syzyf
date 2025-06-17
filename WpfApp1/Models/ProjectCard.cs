@@ -1,16 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 using WpfApp1.Models;
-using WpfApp1.Model;
 
-namespace WpfApp1.Models
+namespace WpfApp1.Model
 {
-    public class Project
+    public class ProjectCard : IProjectBase
     {
         public long Id { get; set; }
         public long ClientId { get; set; }
-        public int NumberOfPeople { get; set; }
-
+        public int NumberOfPeople { get; set; } 
         public string JobLevels { get; set; }
         public bool IsSalaryVisible { get; set; }
         public string JobTitle { get; set; }
@@ -18,7 +20,7 @@ namespace WpfApp1.Models
         public string MainDuties { get; set; }
         public string AdditionalDuties { get; set; }
         public string DevelopmentOpportunities { get; set; }
-        public DateTime PlannedHiringDate { get; set; }
+        public DateTime? PlannedHiringDate { get; set; }
         public string Education { get; set; }
         public string PreferredStudyFields { get; set; }
         public string AdditionalCertifications { get; set; }
@@ -37,24 +39,39 @@ namespace WpfApp1.Models
         public string WorkModes { get; set; }
         public string WorkingHours { get; set; }
         public string OtherRemarks { get; set; }
-        public ProjectStatus Status { get; set; }
+        public bool IsAcceptedDb { get; set; }
 
-        public Client Client { get; set; }
-        public ICollection<CandidateSelection> CandidateSelections { get; set; }
-        public ICollection<ProjectEmployee> ProjectEmployees { get; set; }
-        public ICollection<ProjectVersion> ProjectVersions { get; set; }
+        public ProjectCardStatus Status { get; set; }
 
-        public Project()
+        public ProjectAcceptance ProjectAcceptance { get; set; }
+
+        public bool IsAccepted
         {
-            CandidateSelections = new HashSet<CandidateSelection>();
-            ProjectEmployees = new HashSet<ProjectEmployee>();
-            ProjectVersions = new List<ProjectVersion>();
+            get
+            {
+                return ProjectAcceptance != null &&
+                       ProjectAcceptance.AcceptedByClient &&
+                       ProjectAcceptance.AcceptedByRecruiter &&
+                       ProjectAcceptance.AcceptedBySupport;
+            }
         }
+        [ForeignKey("ClientId")]
+        public Client Client { get; set; }
+        [ForeignKey("RecruiterId")]
+        public long? RecruiterId { get; set; }
+        public Employee Recruiter { get; set; }
+        [InverseProperty("ProjectCard")]
+        public List<Notification> Notifications { get; set; }
+
+
     }
-    public enum ProjectStatus
+
+    public enum ProjectCardStatus
     {
-        Planned,
-        InProgress,
-        Completed
+        Processed,
+        Pending,
+        Accepted,
+        Canceled
     }
+
 }

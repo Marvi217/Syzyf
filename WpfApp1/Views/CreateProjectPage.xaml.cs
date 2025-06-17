@@ -72,11 +72,12 @@ namespace WpfApp1.Views
                 var notification = new Notification
                 {
                     FromId = _user.Id,
-                    ToId = new List<long> { recipient.Id },
+                    ToId = recipient.Id,
                     Title = "Karta Projektu",
                     Tag = "empty",
                     Message = message,
-                    IsRead = false
+                    IsRead = false,
+                    CreatedAt = DateTime.Now
                 };
 
                 _context.Notifications.Add(notification);

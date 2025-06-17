@@ -21,7 +21,6 @@ namespace WpfApp1.Model
 
         public ICollection<CandidateSelection> CandidateSelections { get; set; }
         public ICollection<Evaluation> Evaluations { get; set; }
-        public ICollection<RecruitmentMeeting> RecruitmentMeetings { get; set; }
     }
 
 }

@@ -5,27 +5,57 @@
     <Grid Margin="10">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="Auto"/>
-            <!-- dla logo -->
+            <!-- Logo -->
             <ColumnDefinition Width="*"/>
-            <!-- przestrzeń pośrodku -->
-            <ColumnDefinition Width="Auto"/>
-            <!-- dla przycisków -->
+            <!-- Elastyczna przestrzeń -->
+            <ColumnDefinition Width="*"/>
+            <!-- Przyciski (teraz wykorzysta dostępne miejsce) -->
         </Grid.ColumnDefinitions>
 
         <!-- Logo -->
         <Image Source="C:\Users\pc\source\repos\WpfApp1\WpfApp1\Resources\logo.png"
-           Height="50" VerticalAlignment="Center"
-           Grid.Column="0" MouseLeftButtonDown="Logo_MouseLeftButtonDown" />
+               Height="50" 
+               VerticalAlignment="Center"
+               Grid.Column="0" 
+               MouseLeftButtonDown="Logo_MouseLeftButtonDown"
+               Stretch="Uniform"/>
 
-
-        <!-- Przyciski -->
-        <StackPanel Orientation="Horizontal"
-                    HorizontalAlignment="Right"
-                    Grid.Column="2">
-            <Button x:Name="AddEmployeeButton" Content="Dodaj pracownika" Click="AddEmployeeButton_Click" Visibility="Collapsed" Margin="5"/>
-            <Button x:Name="ProjectsButton" Content="Projekty" Margin="5" Click="ProjectsButton_Click"/>
-            <Button x:Name="NotificationsButton" Content="Powiadomienia" Margin="5" Click="NotificationsButton_Click"/>
-            <Button x:Name="AccountButton" Content="Konto" Margin="5" Click="AccountButton_Click"/>
-        </StackPanel>
+        <!-- Przyciski - teraz będą zawijać się gdy brakuje miejsca -->
+        <WrapPanel Grid.Column="2"
+                  HorizontalAlignment="Right"
+                  VerticalAlignment="Center">
+            <Button x:Name="OrderButton" 
+                    Content="Zlecenia" 
+                    Click="OrderButton_Click" 
+                    Visibility="Collapsed" 
+                    Margin="5"
+                    MinWidth="80"
+                    Style="{DynamicResource MenuButtonStyle}"/>
+            <Button x:Name="AddEmployeeButton" 
+                    Content="Dodaj pracownika" 
+                    Click="AddEmployeeButton_Click" 
+                    Visibility="Collapsed" 
+                    Margin="5"
+                    MinWidth="80"
+                    Style="{DynamicResource MenuButtonStyle}"/>
+            <Button x:Name="ProjectsButton" 
+                    Content="Projekty" 
+                    Margin="5"
+                    Click="ProjectsButton_Click"
+                    MinWidth="80"
+                    Style="{DynamicResource MenuButtonStyle}"/>
+            <Button x:Name="NotificationsButton" 
+                    Content="Powiadomienia" 
+                    Margin="5"
+                    Click="NotificationsButton_Click"
+                    MinWidth="80"
+                    Style="{DynamicResource MenuButtonStyle}"/>
+            <Button x:Name="AccountButton" 
+                    Content="Konto" 
+                    Margin="5"
+                    Click="AccountButton_Click"
+                    MinWidth="80"
+                    Style="{DynamicResource MenuButtonStyle}"/>
+        </WrapPanel>
     </Grid>
 </UserControl>

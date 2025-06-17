@@ -4,26 +4,14 @@
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
       xmlns:local="clr-namespace:WpfApp1.Views"
+      xmlns:conv="clr-namespace:WpfApp1.Converters"
       mc:Ignorable="d"
       Title="ProjectPage">
 
     <Page.Resources>
-        <Style x:Key="StatusTextStyle" TargetType="TextBlock">
-            <Style.Triggers>
-                <DataTrigger Binding="{Binding Status}" Value="Planned">
-                    <Setter Property="Background" Value="LightYellow"/>
-                    <Setter Property="Foreground" Value="Orange"/>
-                </DataTrigger>
-                <DataTrigger Binding="{Binding Status}" Value="InProgress">
-                    <Setter Property="Background" Value="LightGreen"/>
-                    <Setter Property="Foreground" Value="DarkGreen"/>
-                </DataTrigger>
-                <DataTrigger Binding="{Binding Status}" Value="Completed">
-                    <Setter Property="Background" Value="LightBlue"/>
-                    <Setter Property="Foreground" Value="DarkBlue"/>
-                </DataTrigger>
-            </Style.Triggers>
-        </Style>
+        <conv:StatusToBackgroundConverter x:Key="StatusToBackgroundConverter" />
+        <conv:StatusToForegroundConverter x:Key="StatusToForegroundConverter" />
+        <conv:EmployeeToFullNameConverter x:Key="EmployeeToFullNameConverter" />
     </Page.Resources>
 
     <Grid>
@@ -38,46 +26,96 @@
 
         <!-- Przyciski filtrowania -->
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Grid.Row="1" Margin="10">
-            <Button Content="Wszystkie" Click="FilterAll_Click" Margin="5" Padding="10,5"/>
-            <Button Content="Aktywne" Click="FilterActive_Click" Margin="5" Padding="10,5"/>
+            <Button x:Name="MyProjectsButton" Content="Projekty" Click="FilterMy_Click" Margin="5" Padding="10,5"/>
             <Button Content="Planowane" Click="FilterPlanned_Click" Margin="5" Padding="10,5"/>
+            <Button Content="Aktywne" Click="FilterActive_Click" Margin="5" Padding="10,5"/>
             <Button Content="Zakończone" Click="FilterCompleted_Click" Margin="5" Padding="10,5"/>
-            <Button Content="Moje Projekty" Click="FilterMy_Click" Margin="5" Padding="10,5"/>
-            <Button Content="Nowy projekt" Click="AddProject_Click" Margin="5" Padding="10,5" Background="LightBlue"/>
+            <Button x:Name="NewProjectButton" Content="Nowy projekt" Click="AddProject_Click" Margin="5" Padding="10,5" Background="LightBlue"/>
         </StackPanel>
 
-
         <!-- Lista projektów -->
-        <ScrollViewer Grid.Row="2" Margin="10">
+        <ScrollViewer Grid.Row="2" Margin="10" x:Name="ProjectsListView">
             <ItemsControl ItemsSource="{Binding FilteredProjects}">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
-                        <Expander Header="{Binding ProjectName}" Expanded="Expander_Expanded" Margin="0,0,0,10">
-                            <StackPanel Margin="10">
-                                <TextBlock Text="Klient:" FontWeight="Bold"/>
-                                <TextBlock Text="{Binding Client.ClientName}" Margin="0,0,0,10"/>
+                        <Border Background="WhiteSmoke" CornerRadius="5" Padding="5" Margin="0,0,0,10">
+                            <Border.Style>
+                                <Style TargetType="Border">
+                                    <Setter Property="Cursor" Value="Hand"/>
+                                    <Style.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter Property="Background" Value="#FFDDEEFF"/>
+                                        </Trigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
 
-                                <TextBlock Text="Status:" FontWeight="Bold"/>
-                                <TextBlock Text="{Binding Status}" Style="{StaticResource StatusTextStyle}" Margin="0,0,0,10"/>
+                            <Expander>
+                                <Expander.Header>
+                                    <DockPanel VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding JobTitle}" FontWeight="Bold" FontSize="14" Margin="0,0,10,0"/>
+                                        <TextBlock Text="{Binding Client.ClientName}" Foreground="Gray" Margin="0,0,10,0"/>
+                                        <TextBlock Text="•" Foreground="Gray" Margin="0,0,10,0"/>
+                                        <Border Padding="4,2" CornerRadius="5"
+                                                Background="{Binding Status, Converter={StaticResource StatusToBackgroundConverter}}">
+                                            <TextBlock Text="{Binding Status}"
+                                                       Foreground="{Binding Status, Converter={StaticResource StatusToForegroundConverter}}"
+                                                       FontWeight="Bold"/>
+                                        </Border>
+                                    </DockPanel>
+                                </Expander.Header>
 
-                                <TextBlock Text="Pracownicy:" FontWeight="Bold"/>
-                                <ItemsControl ItemsSource="{Binding ProjectEmployees}">
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate>
-                                            <TextBlock Text="{Binding Employee.FullName}" Margin="5,0"/>
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
+                                <StackPanel Margin="10">
+                                    <TextBlock Text="Klient:" FontWeight="Bold"/>
+                                    <TextBlock Text="{Binding Client.Company}" Margin="0,0,0,10"/>
 
-                                <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
-                                    <Button Content="Szczegóły" Click="ViewDetails_Click" CommandParameter="{Binding}" Margin="0,0,10,0"/>
-                                    <Button Content="Edytuj" Click="EditProject_Click" CommandParameter="{Binding}"/>
+                                    <TextBlock Text="Status:" FontWeight="Bold"/>
+                                    <TextBlock Text="{Binding Status}" Margin="0,0,0,10"/>
+
+                                    <TextBlock Text="Pracownik:" FontWeight="Bold"/>
+                                    <TextBlock Text="{Binding Recruiter, Converter={StaticResource EmployeeToFullNameConverter}}" Margin="5,0"/>
+
+                                    <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                                        <Button Content="Szczegóły" Click="ViewDetails_Click" CommandParameter="{Binding}" Margin="0,0,10,0"/>
+                                    </StackPanel>
                                 </StackPanel>
-                            </StackPanel>
-                        </Expander>
+
+                            </Expander>
+                        </Border>
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
         </ScrollViewer>
+
+        <!-- Lista kart projektów -->
+        <ScrollViewer Grid.Row="2" Margin="10" x:Name="ProjectCardsListView" Visibility="Collapsed">
+            <ItemsControl ItemsSource="{Binding FilteredProjectCards}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Border Background="White" BorderBrush="LightGray" BorderThickness="1" CornerRadius="5" Padding="10" Margin="0,0,0,10">
+                            <StackPanel>
+                                <!-- Górny pasek z nazwą projektu, klientem, statusem i pracownikiem -->
+                                <DockPanel VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding ProjectName}" FontWeight="Bold" FontSize="14" Margin="0,0,10,0"/>
+                                    <TextBlock Text="Klient:" FontWeight="Bold"/>
+                                    <TextBlock Text="{Binding Client.Company}" Margin="2,0"/>
+                                    <TextBlock Text="•" Foreground="Gray" Margin="5,0"/>
+                                    <Border Padding="4,2" CornerRadius="5"
+                                Background="{Binding Status, Converter={StaticResource StatusToBackgroundConverter}}">
+                                        <TextBlock Text="{Binding Status}"
+                                       Foreground="{Binding Status, Converter={StaticResource StatusToForegroundConverter}}"
+                                       FontWeight="Bold"/>
+                                    </Border>
+                                    <TextBlock Text="Pracownik:" FontWeight="Bold" Margin="10,0,0,0"/>
+                                    <TextBlock Text="{Binding Recruiter, Converter={StaticResource EmployeeToFullNameConverter}}" Margin="2,0"/>
+                                    <Button Content="Pokaż szczegóły" Click="ViewCardDetails_Click" CommandParameter="{Binding}" Width="150"/>
+                                </DockPanel>
+                            </StackPanel>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+
     </Grid>
 </Page>

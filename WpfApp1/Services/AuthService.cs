@@ -18,6 +18,7 @@ namespace WpfApp1.Services
         {
             return _context.Users
                 .Include(u => u.Employee)
+                    .ThenInclude(e => e.Position)
                 .Include(u => u.Client)
                 .Include(u => u.Candidate)
                 .AsNoTracking()
