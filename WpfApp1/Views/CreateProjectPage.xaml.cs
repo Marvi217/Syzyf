@@ -76,7 +76,8 @@ namespace WpfApp1.Views
                     Title = "Karta Projektu",
                     Tag = "empty",
                     Message = message,
-                    IsRead = false
+                    IsRead = false,
+                    CreatedAt = DateTime.Now
                 };
 
                 _context.Notifications.Add(notification);

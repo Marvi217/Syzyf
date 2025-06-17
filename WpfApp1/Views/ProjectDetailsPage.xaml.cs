@@ -60,6 +60,15 @@ namespace WpfApp1.Views
                     RejectButton.Visibility = Visibility.Collapsed;
                     AcceptButton.Visibility = Visibility.Collapsed;
                     AcceptButton2.Visibility = Visibility.Collapsed;
+                    AssignRecruiterButton.Visibility = Visibility.Collapsed;
+                }
+                else if (_projectData is ProjectCard projectCard && projectCard.ProjectAcceptance?.AcceptedByClient == true)
+                {
+                    AcceptButton2.Visibility = Visibility.Collapsed;
+                    AcceptButton.Visibility = Visibility.Collapsed;
+                    RejectButton.Visibility = Visibility.Collapsed;
+                    EditButton.Visibility = Visibility.Collapsed;
+                    AssignRecruiterButton.Visibility = Visibility.Collapsed;
                 }
                 else
                 {
@@ -97,10 +106,17 @@ namespace WpfApp1.Views
                             EditButton.Visibility = Visibility.Collapsed;
                             RejectButton.Visibility = Visibility.Collapsed;
                         }
-                        else
+                        else if (_projectCardData != null && !_projectCardData.IsAcceptedDb)
                         {
                             EditButton.Visibility = Visibility.Visible;
+                            RejectButton.Visibility = Visibility.Visible;
                         }
+                        else
+                        {
+                            EditButton.Visibility = Visibility.Collapsed;
+                            RejectButton.Visibility = Visibility.Collapsed;
+                        }
+
                     }
                     AssignRecruiterButton.Visibility = Visibility.Collapsed;
                 }
@@ -120,7 +136,6 @@ namespace WpfApp1.Views
                     isAcceptedBySupport = acceptance?.AcceptedBySupport == true;
                     isAcceptedByRecruiter = acceptance?.AcceptedByRecruiter == true;
 
-                    // Sprawdź czy rekruter jest przydzielony - jeśli recruiterId jest ustawiony
                     bool recruiterAssigned = projectCard.RecruiterId != null && projectCard.RecruiterId != 0;
 
                     if (recruiterAssigned && _user.Employee.Position.PositionName == "Wsparcie")
@@ -154,6 +169,12 @@ namespace WpfApp1.Views
                 {
                     AcceptButton2.Visibility = Visibility.Collapsed;
                     AcceptButton.Visibility = Visibility.Collapsed;
+                    EditButton.Visibility = Visibility.Collapsed;
+
+                }
+                else if (_projectCardData != null && isAcceptedByRecruiter == false)
+                {
+                    EditButton.Visibility = Visibility.Visible;
                 }
                 if (_projectForActions != null && _projectForActions.Status.Equals(ProjectStatus.InProgress))
                 {
@@ -162,6 +183,7 @@ namespace WpfApp1.Views
                     AcceptButton.Visibility = Visibility.Collapsed;
                     AcceptButton2.Visibility = Visibility.Collapsed;
                 }
+                RejectButton.Visibility = _user.Employee.Position.PositionName == "Admin" ? Visibility.Visible : Visibility.Collapsed;
             }
 
             DisplayDetails();
@@ -323,7 +345,8 @@ namespace WpfApp1.Views
                             Title = "Karta Projektu",
                             Tag = "firstAccepted",
                             Message = message,
-                            IsRead = false
+                            IsRead = false,
+                            CreatedAt = DateTime.Now
                         };
                         _context.Notifications.Add(notification);
                         card.Status = ProjectCardStatus.Processed;
@@ -434,7 +457,8 @@ namespace WpfApp1.Views
                     Message = message,
                     Tag = "projectAssignmentReplay",
                     ProjectCardId = card.Id,
-                    IsRead = false
+                    IsRead = false,
+                    CreatedAt = DateTime.Now
                 };
                 _context.Notifications.Add(notification);
                 var users = await (
@@ -455,7 +479,8 @@ namespace WpfApp1.Views
                     Message = message,
                     Tag = "projectAssignmentReplay",
                     ProjectCardId = card.Id,
-                    IsRead = false
+                    IsRead = false,
+                    CreatedAt = DateTime.Now
                 };
                 _context.Notifications.Add(notification2);
                 await _context.SaveChangesAsync();

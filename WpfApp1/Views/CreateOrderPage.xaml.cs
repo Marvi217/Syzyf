@@ -144,7 +144,8 @@ Zlecenie wymaga podpisu elektronicznego Klienta dla aktywacji procesu rekrutacyj
                     Message = $"Handlowiec {_user.Employee.FirstName} {_user.Employee.LastName} przesłał Państwu zlecenie do podpisu. Proszę zapoznać się z treścią i podpisać zlecenie.",
                     Tag = "newOrder",
                     OrderId = order.Id,
-                    IsRead = false
+                    IsRead = false,
+                    CreatedAt = DateTime.Now
                 };
 
                 _context.Notifications.Add(notification);

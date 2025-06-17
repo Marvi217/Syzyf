@@ -62,37 +62,28 @@ namespace WpfApp1.Views
                                      _user.Employee?.Position?.PositionName == "Wsparcie";
 
                 List<Notification> filteredNotifications;
+                
+                var allNotifications = await _context.Notifications
+                    .OrderByDescending(n => n.Id)
+                    .ToListAsync();
 
-                if (!isSupportUser)
+                filteredNotifications = new List<Notification>();
+
+                foreach (var notif in allNotifications)
                 {
-                    filteredNotifications = await _context.Notifications
-                        .Where(n => n.ToId == userId)
-                        .OrderByDescending(n => n.Id)
-                        .ToListAsync();
-                }
-                else
-                {
-                    var allNotifications = await _context.Notifications
-                        .OrderByDescending(n => n.Id)
-                        .ToListAsync();
-
-                    filteredNotifications = new List<Notification>();
-
-                    foreach (var notif in allNotifications)
+                    if (notif.ToId == userId)
                     {
-                        if (notif.ToId == userId)
-                        {
-                            filteredNotifications.Add(notif);
-                            continue;
-                        }
-
-                        if (notif.Tag == "orderSigned" && notif.ProjectCardId == null)
-                        {
-                            filteredNotifications.Add(notif);
-                        }
+                        filteredNotifications.Add(notif);
+                        continue;
                     }
 
+                    if (notif.Tag == "orderSigned" && notif.ProjectCardId == null)
+                    {
+                        filteredNotifications.Add(notif);
+                    }
                 }
+
+                
 
                 Notifications.Clear();
                 foreach (var notif in filteredNotifications)
@@ -206,7 +197,8 @@ namespace WpfApp1.Views
                         Message = "Dziękujemy za podpisanie zlecenia. Prosimy o wypełnienie karty projektu z szczegółowymi wymaganiami stanowiska.",
                         Tag = "projectCardRequest",
                         OrderId = order.Id,
-                        IsRead = false
+                        IsRead = false,
+                        CreatedAt = DateTime.Now,
                     };
 
                     _context.Notifications.Add(clientNotification);

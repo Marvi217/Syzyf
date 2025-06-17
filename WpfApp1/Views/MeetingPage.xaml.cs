@@ -381,7 +381,30 @@ namespace WpfApp1.Views
                     EndTime = meetingDate + endTime,
                 };
 
-                // Add selected participants
+                // Dodaj twórcę spotkania jako uczestnika
+                var currentUser = _user;
+                if (currentUser != null)
+                {
+                    var creatorParticipant = new MeetingParticipant();
+
+                    if (_user.Employee != null)
+                    {
+                        creatorParticipant.EmployeeId = _user.Employee.Id;
+                    }
+                    else if (_user.Candidate != null)
+                    {
+                        creatorParticipant.CandidateId = _user.Candidate.Id;
+                    }
+                    else if (_user.Client != null)
+                    {
+                        creatorParticipant.ClientId = _user.Client.Id;
+                    }
+
+                    newMeeting.Participants.Add(creatorParticipant);
+                }
+
+
+                // Dodaj wybranych uczestników
                 foreach (ParticipantItem selected in ParticipantsListBox.SelectedItems)
                 {
                     var participant = new MeetingParticipant();
@@ -416,6 +439,7 @@ namespace WpfApp1.Views
                 MessageBox.Show($"Błąd podczas zapisywania: {ex.Message}", "Błąd", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
+
 
         private bool ValidateForm()
         {

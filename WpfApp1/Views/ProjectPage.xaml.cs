@@ -290,7 +290,6 @@ namespace WpfApp1.Views
                     ProjectsListView.Visibility = Visibility.Collapsed;
                     ProjectCardsListView.Visibility = Visibility.Visible;
 
-                    // Załaduj karty projektu — np. z pełnej listy lub filtrowanej
                     foreach (var card in ProjectCards)
                         FilteredProjectCards.Add(card);
                 }

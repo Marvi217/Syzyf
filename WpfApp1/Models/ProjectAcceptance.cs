@@ -13,7 +13,7 @@ namespace WpfApp1.Model
         public long ProjectCardId { get; set; }
         public ProjectCard ProjectCard { get; set; }
 
-        public long SupportId { get; set; }
+        public long? SupportId { get; set; }
 
         public bool AcceptedBySupport { get; set; }
         public DateTime? SupportAcceptedAt { get; set; }

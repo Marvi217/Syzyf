@@ -15,8 +15,6 @@ namespace WpfApp1.Data
         public DbSet<Position> Positions { get; set; }
         public DbSet<Project> Projects { get; set; }
         public DbSet<ProjectCard> ProjectCards { get; set; }
-        public DbSet<ProjectCardVersion> ProjectCardVersions { get; set; }
-        public DbSet<RecruitmentMeeting> RecruitmentMeetings { get; set; }
         public DbSet<Notification> Notifications { get; set; }
         public DbSet<ProjectAcceptance> ProjectAcceptances { get; set; }
         public DbSet<Evaluation> Evaluations { get; set; }
@@ -36,8 +34,6 @@ namespace WpfApp1.Data
             modelBuilder.Entity<Position>().ToTable("positions");
             modelBuilder.Entity<Project>().ToTable("projects");
             modelBuilder.Entity<ProjectCard>().ToTable("project_cards");
-            modelBuilder.Entity<ProjectCardVersion>().ToTable("project_card_version");
-            modelBuilder.Entity<RecruitmentMeeting>().ToTable("recruitmentmeetings");
             modelBuilder.Entity<Notification>().ToTable("notification");
             modelBuilder.Entity<Evaluation>().ToTable("evaluation");
             modelBuilder.Entity<Invoice>().ToTable("invoices");
@@ -53,8 +49,6 @@ namespace WpfApp1.Data
             modelBuilder.Entity<Position>().HasKey(p => p.Id);
             modelBuilder.Entity<Project>().HasKey(p => p.Id);
             modelBuilder.Entity<ProjectCard>().HasKey(pc => pc.Id);
-            modelBuilder.Entity<ProjectCardVersion>().HasKey(c => c.Id);
-            modelBuilder.Entity<RecruitmentMeeting>().HasKey(rm => rm.Id);
             modelBuilder.Entity<Evaluation>().HasKey(ev => ev.Id);
             modelBuilder.Entity<Invoice>().HasKey(i => i.Id);
             modelBuilder.Entity<User>().HasKey(u => u.Id);
@@ -219,13 +213,6 @@ namespace WpfApp1.Data
                       .OnDelete(DeleteBehavior.Cascade);
             });
 
-            modelBuilder.Entity<ProjectCardVersion>(entity =>
-            {
-                entity.Property(pcv  => pcv.Id).HasColumnName("id");
-                entity.Property(pcv => pcv.SerializedData).HasColumnName("serialized_data");
-                entity.Property(pcv => pcv.CreatedAt).HasColumnName("created_at");  
-            });
-
 
             modelBuilder.Entity<Meeting>(entity =>
             {
@@ -235,17 +222,25 @@ namespace WpfApp1.Data
                 entity.Property(m => m.EndTime).HasColumnName("end_time");
             });
 
-
-            modelBuilder.Entity<RecruitmentMeeting>(entity =>
+            modelBuilder.Entity<MeetingParticipant>(entity =>
             {
-                entity.Property(rm => rm.Id).HasColumnName("id");
-                entity.Property(e => e.Title).HasColumnName("title");
-                entity.Property(rm => rm.MeetingDate).HasColumnName("meeting_date");
-                entity.Property(rm => rm.Location).HasColumnName("location");
-                entity.Property(rm => rm.MeetingType).HasColumnName("meeting_type");
-                entity.Property(rm => rm.CandidateId).HasColumnName("candidate_id");
-                entity.Property(rm => rm.ClientId).HasColumnName("client_id");
+                entity.ToTable("meeting_participants");
+
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Id).HasColumnName("id");
+                entity.Property(e => e.MeetingId).HasColumnName("meeting_id");
+                entity.Property(e => e.EmployeeId).HasColumnName("employee_id");
+                entity.Property(e => e.CandidateId).HasColumnName("candidate_id");
+                entity.Property(e => e.ClientId).HasColumnName("client_id");
+
+                entity.HasOne(e => e.Meeting)
+                    .WithMany(m => m.Participants)
+                    .HasForeignKey(e => e.MeetingId);
             });
+
+
+
+
 
             modelBuilder.Entity<Evaluation>(entity =>
             {
@@ -420,18 +415,6 @@ namespace WpfApp1.Data
                 .WithMany(c => c.Projects)
                 .HasForeignKey(p => p.ClientId)
                 .HasConstraintName("FKksdiyuily2f4ca2y53k07pmq");
-
-            modelBuilder.Entity<RecruitmentMeeting>()
-                .HasOne(rm => rm.Candidate)
-                .WithMany(c => c.RecruitmentMeetings)
-                .HasForeignKey(rm => rm.CandidateId)
-                .HasConstraintName("FKqocug7k7x65ifk7852af4mbm0");
-
-            modelBuilder.Entity<RecruitmentMeeting>()
-                .HasOne(rm => rm.Client)
-                .WithMany(c => c.RecruitmentMeetings)
-                .HasForeignKey(rm => rm.ClientId)
-                .HasConstraintName("FKtoxclyjc589lc4peirv8i24fp");
 
             modelBuilder.Entity<User>()
                 .HasOne(u => u.Employee)

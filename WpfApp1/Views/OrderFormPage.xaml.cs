@@ -100,7 +100,8 @@ namespace WpfApp1.Views
                         Message = $"Klient {_user.Login} podpisał zlecenie. Wyślij kartę projektu do wypełnienia.",
                         Tag = "orderSigned",
                         OrderId = _order.Id,
-                        IsRead = false
+                        IsRead = false,
+                        CreatedAt = DateTime.Now
                     };
 
                     _context.Notifications.Add(notification);

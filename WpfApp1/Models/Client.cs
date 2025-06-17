@@ -25,7 +25,6 @@ namespace WpfApp1.Models
         public ICollection<ProjectCard> ProjectCards { get; set; }
         public ICollection<Evaluation> Evaluations { get; set; }
         public ICollection<Invoice> Invoices { get; set; }
-        public ICollection<RecruitmentMeeting> RecruitmentMeetings { get; set; }
     }
 
 
