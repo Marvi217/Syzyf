@@ -14,15 +14,15 @@ namespace WpfApp1.Views
 {
     public partial class MeetingPage : Page
     {
-        private readonly Frame _mainFrame;
-        private readonly User _user;
-        private readonly SyzyfContext _context;
-        private DateTime _currentWeekStart;
-        private List<Meeting> _weeklyMeetings;
-        private List<ParticipantItem> _availableParticipants;
+        public readonly Frame _mainFrame;
+        public readonly User _user;
+        public readonly SyzyfContext _context;
+        public DateTime _currentWeekStart;
+        public List<Meeting> _weeklyMeetings;
+        public List<ParticipantItem> _availableParticipants;
 
         // Kolory dla różnych typów spotkań
-        private readonly Brush[] _meetingColors =
+        public readonly Brush[] _meetingColors =
         {
             new SolidColorBrush(Color.FromRgb(98, 100, 167)),  // Fioletowy
             new SolidColorBrush(Color.FromRgb(0, 120, 212)),   // Niebieski
@@ -51,7 +51,7 @@ namespace WpfApp1.Views
             UpdateCalendarView();
         }
 
-        private void LoadAvailableParticipants()
+        public void LoadAvailableParticipants()
         {
             _availableParticipants = new List<ParticipantItem>();
 
@@ -88,13 +88,13 @@ namespace WpfApp1.Views
             ParticipantsListBox.ItemsSource = _availableParticipants;
         }
 
-        private DateTime GetWeekStart(DateTime date)
+        private static DateTime GetWeekStart(DateTime date)
         {
             int daysFromMonday = ((int)date.DayOfWeek - 1 + 7) % 7;
             return date.Date.AddDays(-daysFromMonday);
         }
 
-        private void UpdateCalendarView()
+        public void UpdateCalendarView()
         {
             LoadWeeklyMeetings();
             UpdateMonthYearDisplay();
@@ -102,7 +102,7 @@ namespace WpfApp1.Views
             AddMeetingsToGrid();
         }
 
-        private void LoadWeeklyMeetings()
+        public void LoadWeeklyMeetings()
         {
             DateTime weekEnd = _currentWeekStart.AddDays(7).AddTicks(-1);
 
@@ -128,14 +128,14 @@ namespace WpfApp1.Views
         }
 
 
-        private void UpdateMonthYearDisplay()
+        public void UpdateMonthYearDisplay()
         {
             var culture = new CultureInfo("pl-PL");
             string monthName = _currentWeekStart.ToString("MMMM yyyy", culture);
             CurrentMonthYear.Text = char.ToUpper(monthName[0]) + monthName.Substring(1);
         }
 
-        private void BuildCalendarGrid()
+        public void BuildCalendarGrid()
         {
             CalendarGrid.Children.Clear();
             CalendarGrid.RowDefinitions.Clear();
@@ -202,7 +202,7 @@ namespace WpfApp1.Views
             }
         }
 
-        private void AddMeetingsToGrid()
+        public void AddMeetingsToGrid()
         {
             foreach (var meeting in _weeklyMeetings)
             {
@@ -223,7 +223,7 @@ namespace WpfApp1.Views
             }
         }
 
-        private Border CreateMeetingBlock(Meeting meeting)
+        public Border CreateMeetingBlock(Meeting meeting)
         {
             var colorIndex = Math.Abs(meeting.Title.GetHashCode()) % _meetingColors.Length;
             var bgColor = _meetingColors[colorIndex];
@@ -266,7 +266,7 @@ namespace WpfApp1.Views
             return border;
         }
 
-        private void ShowMeetingDetails(Meeting meeting)
+        public void ShowMeetingDetails(Meeting meeting)
         {
             string details = $"Spotkanie: {meeting.Title}\n" +
                              $"Data: {meeting.StartTime:dd.MM.yyyy HH:mm}\n";
@@ -304,21 +304,21 @@ namespace WpfApp1.Views
             MessageBox.Show(details, "Szczegóły spotkania", MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
-        private void PrevWeek_Click(object sender, RoutedEventArgs e)
+        public void PrevWeek_Click(object sender, RoutedEventArgs e)
         {
             _currentWeekStart = _currentWeekStart.AddDays(-7);
             SideCalendar.SelectedDate = _currentWeekStart;
             UpdateCalendarView();
         }
 
-        private void NextWeek_Click(object sender, RoutedEventArgs e)
+        public void NextWeek_Click(object sender, RoutedEventArgs e)
         {
             _currentWeekStart = _currentWeekStart.AddDays(7);
             SideCalendar.SelectedDate = _currentWeekStart;
             UpdateCalendarView();
         }
 
-        private void SideCalendar_SelectedDatesChanged(object sender, SelectionChangedEventArgs e)
+        public void SideCalendar_SelectedDatesChanged(object sender, SelectionChangedEventArgs e)
         {
             if (SideCalendar.SelectedDate.HasValue)
             {
@@ -327,19 +327,19 @@ namespace WpfApp1.Views
             }
         }
 
-        private void NewMeeting_Click(object sender, RoutedEventArgs e)
+        public void NewMeeting_Click(object sender, RoutedEventArgs e)
         {
             MeetingDatePicker.SelectedDate = SideCalendar.SelectedDate ?? DateTime.Today;
             NewMeetingPopup.IsOpen = true;
         }
 
-        private void CancelMeeting_Click(object sender, RoutedEventArgs e)
+        public void CancelMeeting_Click(object sender, RoutedEventArgs e)
         {
             NewMeetingPopup.IsOpen = false;
             ClearForm();
         }
 
-        private void SaveMeeting_Click(object sender, RoutedEventArgs e)
+        public void SaveMeeting_Click(object sender, RoutedEventArgs e)
         {
             if (!ValidateForm())
                 return;
@@ -441,7 +441,7 @@ namespace WpfApp1.Views
         }
 
 
-        private bool ValidateForm()
+        public bool ValidateForm()
         {
             if (string.IsNullOrWhiteSpace(TitleTextBox.Text))
             {
@@ -470,7 +470,7 @@ namespace WpfApp1.Views
             return true;
         }
 
-        private void ClearForm()
+        public void ClearForm()
         {
             TitleTextBox.Text = "";
             MeetingDatePicker.SelectedDate = null;

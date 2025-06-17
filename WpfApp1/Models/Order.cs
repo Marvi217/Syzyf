@@ -31,9 +31,9 @@ namespace WpfApp1.Model
 
     public enum OrderStatus
     {
-        Sent = 0,           // Wysłane do klienta
-        Signed = 1,         // Podpisane przez klienta
-        ProjectCardSent = 2,// Karta projektu wysłana
-        Completed = 3       // Zakończone
+        Sent = 0,           
+        Signed = 1,         
+        ProjectCardSent = 2,
+        Completed = 3
     }
 }
