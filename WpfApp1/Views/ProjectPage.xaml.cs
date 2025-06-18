@@ -86,7 +86,6 @@ namespace WpfApp1.Views
 
                     var daysPassed = (DateTime.Now - latestNotification.CreatedAt).TotalDays;
 
-                    // 3 dni – przypomnienie klientowi
                     if (daysPassed > 3 && !card.Notifications.Any(n => n.Tag == "Reminder3"))
                     {
                         var reminderToClient = new Notification
@@ -103,7 +102,6 @@ namespace WpfApp1.Views
                         _context.Notifications.Add(reminderToClient);
                     }
 
-                    // 6 dni – powiadomienie wsparcia
                     if (daysPassed > 6 && !card.Notifications.Any(n => n.Tag == "Reminder6"))
                     {
                         var support = card.ProjectAcceptance?.SupportId;
@@ -124,7 +122,6 @@ namespace WpfApp1.Views
                         }
                     }
 
-                    // 15 dni – anuluj kartę
                     if (daysPassed > 15)
                     {
                         card.Status = ProjectCardStatus.Canceled;
@@ -135,7 +132,6 @@ namespace WpfApp1.Views
             }
             catch (Exception ex)
             {
-                //Nic nie rób, błędy są ignorowane, ponieważ to tylko przypomnienia
             }
         }
 
@@ -143,31 +139,25 @@ namespace WpfApp1.Views
         {
             try
             {
-                // Pokaż przycisk "Nowy projekt" tylko dla użytkowników Wsparcia
                 if (_user.EmployeeId == null)
                 {
-                    // Brak pracownika - ukryj przycisk
                     NewProjectButton.Visibility = Visibility.Collapsed;
                 }
                 else
                 {
-                    // Sprawdź czy Employee i Position nie są null
                     if (_user.Employee != null && _user.Employee.Position != null)
                     {
                         if (_user.Employee.Position.PositionName == "Wsparcie")
                         {
-                            // Wsparcie - pokaż przycisk
                             NewProjectButton.Visibility = Visibility.Visible;
                         }
                         else
                         {
-                            // Inne pozycje (w tym handlowcy) - ukryj przycisk
                             NewProjectButton.Visibility = Visibility.Collapsed;
                         }
                     }
                     else
                     {
-                        // Brak danych o pozycji - ukryj przycisk
                         NewProjectButton.Visibility = Visibility.Collapsed;
                     }
                 }
@@ -175,7 +165,7 @@ namespace WpfApp1.Views
                 await LoadProjectsAsync();
                 await LoadProjectCardsAsync();
                 await CheckClientAcceptanceDelaysAsync();
-                ApplyFilter(); // Zastosuj domyślny filtr po załadowaniu danych
+                ApplyFilter();
             }
             catch (Exception ex)
             {
@@ -193,7 +183,6 @@ namespace WpfApp1.Views
                 if (_user.Employee != null && _user.Employee.Position != null &&
                     _user.Employee.Position.PositionName == "Wsparcie")
                 {
-                    // Wsparcie widzi wszystkie karty
                     cards = await _context.ProjectCards
                         .Include(pc => pc.Client)
                         .Include(pc => pc.Recruiter)
@@ -201,7 +190,6 @@ namespace WpfApp1.Views
                 }
                 else if (_user.EmployeeId != null)
                 {
-                    // Rekruter widzi tylko swoje karty
                     cards = await _context.ProjectCards
                         .Include(pc => pc.Client)
                         .Include(pc => pc.Recruiter)
@@ -218,7 +206,6 @@ namespace WpfApp1.Views
                 }
                 else
                 {
-                    // Pozostali nie widzą kart
                     cards = new List<ProjectCard>();
                 }
 

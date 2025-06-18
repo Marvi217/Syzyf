@@ -71,7 +71,8 @@ namespace WpfApp1.Model
         Processed,
         Pending,
         Accepted,
-        Canceled
+        Canceled,
+        Rejected
     }
 
 }

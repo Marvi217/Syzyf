@@ -19,6 +19,7 @@ namespace WpfApp1.Views
         private Notification _selectedNotification;
         private User _user;
         private readonly SyzyfContext _context;
+        private readonly Notification _sourceNotification;
 
         public ObservableCollection<Notification> Notifications { get; set; }
 
@@ -39,12 +40,13 @@ namespace WpfApp1.Views
             }
         }
 
-        public NotificationPage(Frame mainFrame, User user, SyzyfContext context)
+        public NotificationPage(Frame mainFrame, User user, SyzyfContext context, Notification sourceNotification = null)
         {
             InitializeComponent();
             _mainFrame = mainFrame;
             _user = user;
             _context = context;
+            _sourceNotification = sourceNotification;
 
             Notifications = new ObservableCollection<Notification>();
             TopMenu.Initialize(_mainFrame, _user);
@@ -348,6 +350,36 @@ namespace WpfApp1.Views
                 {
                     MessageBox.Show($"Nie można otworzyć szczegółów projektu: {ex.Message}",
                                    "Błąd", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+        }
+
+        // W pliku NotificationPage.xaml.cs
+
+        private async void EditRejectedCard_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button btn && btn.DataContext is Notification notif && notif.ProjectCardId.HasValue)
+            {
+                try
+                {
+                    var projectCard = await _context.ProjectCards
+                        .Include(pc => pc.Client) // Dołączamy klienta, bo może być potrzebny
+                        .FirstOrDefaultAsync(pc => pc.Id == notif.ProjectCardId.Value);
+
+                    if (projectCard == null)
+                    {
+                        MessageBox.Show("Nie znaleziono powiązanej karty projektu.", "Błąd", MessageBoxButton.OK, MessageBoxImage.Error);
+                        return;
+                    }
+
+                    // Przejdź do formularza edycji karty projektu
+                    var editPage = new ProjectCardFormPage(_mainFrame, _user, _context, projectCard, notif); // Przekazujemy powiadomienie!
+                    _mainFrame.Navigate(editPage);
+
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Błąd podczas otwierania formularza edycji: {ex.Message}", "Błąd", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }
         }
