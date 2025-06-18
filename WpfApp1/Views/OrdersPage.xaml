@@ -71,7 +71,7 @@
 
                                 <StackPanel Margin="10">
                                     <TextBlock Text="Klient:" FontWeight="Bold"/>
-                                    <TextBlock Text="{Binding Client.ClientName}" Margin="0,0,0,10"/>
+                                    <TextBlock Text="{Binding Client.Company}" Margin="0,0,0,10"/>
 
                                     <TextBlock Text="Status:" FontWeight="Bold"/>
                                     <TextBlock Text="{Binding Status}" Margin="0,0,0,10"/>

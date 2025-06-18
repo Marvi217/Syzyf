@@ -16,29 +16,36 @@ namespace WpfApp1.Views
         private readonly Frame _mainFrame;
         private readonly User _user;
         private readonly SyzyfContext _context;
-        private readonly Notification _notification;
+        private readonly Notification _sourceNotification;
         private readonly ProjectCard _project;
 
+        public ProjectCardFormPage()
+        {
+            InitializeComponent();
+        }
+        // Konstruktor do tworzenia nowej karty
         public ProjectCardFormPage(Frame mainFrame, User user, SyzyfContext context, Notification notification)
         {
             InitializeComponent();
             _mainFrame = mainFrame;
             _user = user;
             _context = context;
-            _notification = notification;
+            _sourceNotification = notification;
             _project = null;
 
             InitializeUI();
             InitializeEventHandlers();
         }
 
-        public ProjectCardFormPage(Frame mainFrame, User user, SyzyfContext context, ProjectCard project)
+        // Konstruktor do edycji istniejącej karty
+        public ProjectCardFormPage(Frame mainFrame, User user, SyzyfContext context, ProjectCard projectToEdit, Notification sourceNotification = null)
         {
             InitializeComponent();
             _mainFrame = mainFrame;
             _user = user;
             _context = context;
-            _project = project;
+            _project = projectToEdit;
+            _sourceNotification = sourceNotification;
 
             InitializeUI();
             FillFormWithProjectData();
@@ -47,7 +54,6 @@ namespace WpfApp1.Views
 
         private void InitializeUI()
         {
-            // Inicjalizacja komponentów UI, menu, przycisków
             TopMenu.Initialize(_mainFrame, _user);
             ConfigureButtonVisibility();
         }
@@ -55,31 +61,25 @@ namespace WpfApp1.Views
         private void ConfigureButtonVisibility()
         {
             bool isEditMode = _project != null;
-            SaveCardButton.Visibility = isEditMode ? Visibility.Collapsed : Visibility.Visible;
-            CancelCardButton.Visibility = isEditMode ? Visibility.Collapsed : Visibility.Visible;
-            SaveProjectButton.Visibility = isEditMode ? Visibility.Visible : Visibility.Collapsed;
-            CancelProjectButton.Visibility = isEditMode ? Visibility.Visible : Visibility.Collapsed;
+            // Pamiętaj, aby zmienić nazwy przycisków w XAML (np. SaveCardButton na SaveChangesButton)
+            SaveChangesButton.Visibility = isEditMode ? Visibility.Visible : Visibility.Visible;
+            CancelCardButton.Visibility = isEditMode ? Visibility.Visible : Visibility.Visible;
         }
 
-        private async void SaveProjectCard_Click(object sender, RoutedEventArgs e)
+        // Zmieniono nazwy metod Click dla jasności
+        private async void SaveChanges_Click(object sender, RoutedEventArgs e)
         {
-            await SaveProjectCard(false);
+            // Zapisuje zmiany, ale nie tworzy projektu
+            await SaveProjectCard(isCreatingProject: false);
         }
 
-        private async void SaveProject_Click(object sender, RoutedEventArgs e)
+        private async Task SaveProjectCard(bool isCreatingProject)
         {
-            await SaveProjectCard(true);
-        }
+            SaveChangesButton.IsEnabled = false;
 
-        private async Task SaveProjectCard(bool isProjectSave)
-        {
             await using var transaction = await _context.Database.BeginTransactionAsync();
-
             try
             {
-                long currentUserId = _user.Id;
-                long projectCardId;
-
                 if (!ValidateRequiredFields())
                 {
                     return;
@@ -87,11 +87,10 @@ namespace WpfApp1.Views
 
                 var formData = GetFormData();
 
-                if (_project == null)
+                if (_project == null) // SCENARIUSZ: Tworzenie nowej karty
                 {
                     var newCard = new ProjectCard
                     {
-                        ClientId = _user.ClientId ?? 0,
                         NumberOfPeople = formData.NumberOfPeople,
                         IsSalaryVisible = formData.IsSalaryVisible,
                         JobTitle = formData.JobTitle,
@@ -99,6 +98,7 @@ namespace WpfApp1.Views
                         Department = formData.Department,
                         MainDuties = formData.MainDuties,
                         AdditionalDuties = formData.AdditionalDuties,
+                        DevelopmentOpportunities = formData.DevelopmentOpportunities, // Ważne, aby to pole też było w GetFormData
                         PlannedHiringDate = formData.PlannedHiringDate,
                         Education = formData.Education,
                         PreferredStudyFields = formData.PreferredStudyFields,
@@ -118,13 +118,14 @@ namespace WpfApp1.Views
                         WorkModes = formData.WorkModes,
                         WorkingHours = formData.WorkingHours,
                         OtherRemarks = formData.OtherRemarks,
+
+                        // --- Ustawienie pól specyficznych dla logiki tworzenia ---
+                        ClientId = _user.ClientId ?? 0,
                         Status = ProjectCardStatus.Pending,
-                        IsAcceptedDb = isProjectSave
+                        IsAcceptedDb = false // Nowa karta nigdy nie jest od razu projektem
                     };
                     await _context.ProjectCards.AddAsync(newCard);
                     await _context.SaveChangesAsync();
-
-                    projectCardId = newCard.Id;
 
                     var lastOrder = await _context.Orders
                         .Where(o => o.ClientId == _user.ClientId)
@@ -134,66 +135,70 @@ namespace WpfApp1.Views
                     if (lastOrder != null)
                     {
                         lastOrder.ProjectCardId = newCard.Id;
-                        await _context.SaveChangesAsync();
                     }
 
-                    if (_notification != null)
+                    if (_sourceNotification != null)
                     {
                         var responseNotification = new Notification
                         {
-                            FromId = currentUserId,
-                            ToId = _notification.FromId,
+                            FromId = _user.Id,
+                            ToId = _sourceNotification.FromId,
                             Title = "Nowa karta projektu",
                             Tag = "fulfilled",
                             Message = $"Klient {_user.Client?.Company} utworzył nową kartę projektu '{formData.JobTitle}'.",
                             IsRead = false,
-                            ProjectCardId = projectCardId
+                            ProjectCardId = newCard.Id
                         };
                         await _context.Notifications.AddAsync(responseNotification);
                     }
                 }
-                else
+                else // SCENARIUSZ: Edycja istniejącej karty
                 {
                     var existingCard = await _context.ProjectCards.FindAsync(_project.Id);
                     if (existingCard == null)
                         throw new Exception("Nie znaleziono karty projektu do aktualizacji");
 
                     UpdateProjectCard(existingCard, formData);
-                    existingCard.IsAcceptedDb = isProjectSave;
-                    _context.ProjectCards.Update(existingCard);
-                    projectCardId = existingCard.Id;
 
-                    var lastNotification = await _context.Notifications
-                        .Where(n => n.ToId == currentUserId && n.ProjectCardId == projectCardId)
-                        .OrderByDescending(n => n.CreatedAt)
-                        .FirstOrDefaultAsync();
+                    // --- KLUCZOWA LOGIKA ---
+                    // Resetuj status i flagę, jeśli to tylko poprawki
+                    existingCard.Status = ProjectCardStatus.Pending;
+                    existingCard.IsAcceptedDb = isCreatingProject;
 
-                    if (lastNotification != null)
+                    if (_sourceNotification != null && _sourceNotification.Tag == "rejection")
                     {
-                        var updateNotification = new Notification
+                        var replyNotification = new Notification
                         {
-                            FromId = currentUserId,
-                            ToId = lastNotification.FromId,
-                            Title = "Edytowana karta projektu",
-                            Tag = "reply",
-                            Message = $"Użytkownik {_user.Employee?.FirstName} {_user.Employee?.LastName} zaktualizował kartę projektu '{formData.JobTitle}'.",
+                            FromId = _user.Id,
+                            ToId = _sourceNotification.FromId,
+                            Title = "Karta projektu została poprawiona",
+                            Message = $"Klient {_user.Client?.Company} poprawił kartę projektu '{formData.JobTitle}'.",
+                            Tag = "rejection_processed",
                             IsRead = false,
-                            ProjectCardId = projectCardId,
+                            ProjectCardId = existingCard.Id,
                             CreatedAt = DateTime.Now
                         };
-                        await _context.Notifications.AddAsync(updateNotification);
+                        await _context.Notifications.AddAsync(replyNotification);
+
+                        _sourceNotification.Tag = "rejection_processed_old";
+                        _context.Notifications.Update(_sourceNotification);
                     }
                 }
 
                 await _context.SaveChangesAsync();
 
-                var updatedCard = await _context.ProjectCards.FindAsync(projectCardId);
-                if (updatedCard != null && updatedCard.IsAcceptedDb)
+                // Tworzenie projektu jest teraz warunkowe
+                if (isCreatingProject)
                 {
-                    await CreateProjectFromCard(projectCardId);
+                    long cardIdToCheck = _project?.Id ?? (await _context.ProjectCards.OrderByDescending(pc => pc.Id).FirstAsync()).Id;
+                    var updatedCard = await _context.ProjectCards.FindAsync(cardIdToCheck);
+
+                    if (updatedCard != null)
+                    {
+                        await CreateProjectFromCard(updatedCard.Id);
+                    }
                 }
 
-                await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
 
                 MessageBox.Show("Karta projektu została zapisana pomyślnie.", "Sukces", MessageBoxButton.OK, MessageBoxImage.Information);
@@ -204,97 +209,10 @@ namespace WpfApp1.Views
                 await transaction.RollbackAsync();
                 MessageBox.Show($"Błąd podczas zapisu karty projektu:\n{ex.Message}", "Błąd", MessageBoxButton.OK, MessageBoxImage.Error);
             }
-        }
-
-        private ProjectCard GetFormData()
-        {
-            return new ProjectCard
+            finally
             {
-                NumberOfPeople = GetIntFromTextBox(NumberOfPeopleBox),
-                IsSalaryVisible = GetBoolFromRadioButtonGroup(SalaryVisibilityPanel),
-                JobTitle = GetTextFromTextBox(JobTitleBox),
-                JobLevels = GetCheckedValuesFromPanel(JobLevelsPanel),
-                Department = GetTextFromTextBox(DepartmentBox),
-                MainDuties = GetTextFromTextBox(MainDutiesBox),
-                AdditionalDuties = GetTextFromTextBox(AdditionalDutiesBox),
-                PlannedHiringDate = PlannedHiringDatePicker.SelectedDate,
-                Education = GetCheckedValuesFromPanel(EducationPanel),
-                PreferredStudyFields = GetTextFromTextBox(PreferredStudyFieldsBox),
-                AdditionalCertifications = GetTextFromTextBox(AdditionalCertificationsBox),
-                RequiredExperience = GetTextFromTextBox(RequiredExperienceBox),
-                PreferredExperience = GetTextFromTextBox(PreferredExperienceBox),
-                RequiredSkills = GetTextFromTextBox(RequiredSkillsBox),
-                PreferredSkills = GetTextFromTextBox(PreferredSkillsBox),
-                RequiredLanguages = GetTextFromTextBox(RequiredLanguagesBox),
-                PreferredLanguages = GetTextFromTextBox(PreferredLanguagesBox),
-                EmploymentsForms = GetCheckedValuesFromPanel(EmploymentFormsPanel),
-                GrossSalary = GetTextFromTextBox(GrossSalaryBox),
-                BonusSystem = GetBoolFromRadioButtonGroup(BonusPanel),
-                AdditionalBenefits = GetTextFromTextBox(AdditionalBenefitsBox),
-                WorkTools = GetTextFromTextBox(WorkToolsBox),
-                WorkPlace = GetTextFromTextBox(WorkPlaceBox),
-                WorkModes = GetCheckedValuesFromPanel(WorkModesPanel),
-                WorkingHours = GetTextFromTextBox(WorkingHoursBox),
-                OtherRemarks = GetTextFromTextBox(OtherRemarksBox)
-            };
-        }
-
-        private string GetTextFromTextBox(TextBox textBox)
-        {
-            return textBox?.Text?.Trim() ?? "";
-        }
-
-        private int GetIntFromTextBox(TextBox textBox)
-        {
-            if (int.TryParse(GetTextFromTextBox(textBox), out int result))
-                return result;
-            return 0;
-        }
-
-        private bool GetBoolFromRadioButtonGroup(StackPanel panel)
-        {
-            var radio = panel.Children.OfType<RadioButton>().FirstOrDefault(rb => rb.IsChecked == true);
-            if (radio != null)
-                return radio.Content.ToString() == "Tak";
-            return false;
-        }
-
-        private string GetCheckedValuesFromPanel(StackPanel panel)
-        {
-            if (panel == null) return "";
-            var selected = panel.Children.OfType<CheckBox>().Where(cb => cb.IsChecked == true)
-                .Select(cb => cb.Content.ToString());
-            return string.Join(", ", selected);
-        }
-
-        private void UpdateProjectCard(ProjectCard existing, ProjectCard data)
-        {
-            existing.NumberOfPeople = data.NumberOfPeople;
-            existing.IsSalaryVisible = data.IsSalaryVisible;
-            existing.JobTitle = data.JobTitle;
-            existing.JobLevels = data.JobLevels;
-            existing.Department = data.Department;
-            existing.MainDuties = data.MainDuties;
-            existing.AdditionalDuties = data.AdditionalDuties;
-            existing.PlannedHiringDate = data.PlannedHiringDate;
-            existing.Education = data.Education;
-            existing.PreferredStudyFields = data.PreferredStudyFields;
-            existing.AdditionalCertifications = data.AdditionalCertifications;
-            existing.RequiredExperience = data.RequiredExperience;
-            existing.PreferredExperience = data.PreferredExperience;
-            existing.RequiredSkills = data.RequiredSkills;
-            existing.PreferredSkills = data.PreferredSkills;
-            existing.RequiredLanguages = data.RequiredLanguages;
-            existing.PreferredLanguages = data.PreferredLanguages;
-            existing.EmploymentsForms = data.EmploymentsForms;
-            existing.GrossSalary = data.GrossSalary;
-            existing.BonusSystem = data.BonusSystem;
-            existing.AdditionalBenefits = data.AdditionalBenefits;
-            existing.WorkTools = data.WorkTools;
-            existing.WorkPlace = data.WorkPlace;
-            existing.WorkModes = data.WorkModes;
-            existing.WorkingHours = data.WorkingHours;
-            existing.OtherRemarks = data.OtherRemarks;
+                SaveChangesButton.IsEnabled = true;
+            }
         }
 
         private async Task CreateProjectFromCard(long projectCardId)
@@ -304,6 +222,7 @@ namespace WpfApp1.Views
 
             var projectCard = await _context.ProjectCards
                 .Include(pc => pc.Client)
+                .AsNoTracking()
                 .FirstOrDefaultAsync(pc => pc.Id == projectCardId);
             if (projectCard == null) return;
 
@@ -351,11 +270,103 @@ namespace WpfApp1.Views
                 Tag = "project_created"
             };
             await _context.Notifications.AddAsync(notification);
+
+            // Końcowy SaveChanges jest w metodzie nadrzędnej
+        }
+
+        private ProjectCard GetFormData()
+        {
+            return new ProjectCard
+            {
+                NumberOfPeople = GetIntFromTextBox(NumberOfPeopleBox),
+                IsSalaryVisible = GetBoolFromRadioButtonGroup(SalaryVisibilityPanel),
+                JobTitle = GetTextFromTextBox(JobTitleBox),
+                JobLevels = GetCheckedValuesFromPanel(JobLevelsPanel),
+                Department = GetTextFromTextBox(DepartmentBox),
+                MainDuties = GetTextFromTextBox(MainDutiesBox),
+                AdditionalDuties = GetTextFromTextBox(AdditionalDutiesBox),
+                PlannedHiringDate = PlannedHiringDatePicker.SelectedDate,
+                Education = GetCheckedValuesFromPanel(EducationPanel),
+                PreferredStudyFields = GetTextFromTextBox(PreferredStudyFieldsBox),
+                AdditionalCertifications = GetTextFromTextBox(AdditionalCertificationsBox),
+                RequiredExperience = GetTextFromTextBox(RequiredExperienceBox),
+                PreferredExperience = GetTextFromTextBox(PreferredExperienceBox),
+                RequiredSkills = GetTextFromTextBox(RequiredSkillsBox),
+                PreferredSkills = GetTextFromTextBox(PreferredSkillsBox),
+                RequiredLanguages = GetTextFromTextBox(RequiredLanguagesBox),
+                PreferredLanguages = GetTextFromTextBox(PreferredLanguagesBox),
+                EmploymentsForms = GetCheckedValuesFromPanel(EmploymentFormsPanel),
+                GrossSalary = GetTextFromTextBox(GrossSalaryBox),
+                BonusSystem = GetBoolFromRadioButtonGroup(BonusPanel),
+                AdditionalBenefits = GetTextFromTextBox(AdditionalBenefitsBox),
+                WorkTools = GetTextFromTextBox(WorkToolsBox),
+                WorkPlace = GetTextFromTextBox(WorkPlaceBox),
+                WorkModes = GetCheckedValuesFromPanel(WorkModesPanel),
+                WorkingHours = GetTextFromTextBox(WorkingHoursBox),
+                OtherRemarks = GetTextFromTextBox(OtherRemarksBox)
+            };
+        }
+
+        private string GetTextFromTextBox(TextBox textBox) => textBox?.Text?.Trim() ?? "";
+
+        private int GetIntFromTextBox(TextBox textBox) => int.TryParse(GetTextFromTextBox(textBox), out int result) ? result : 0;
+
+        private bool GetBoolFromRadioButtonGroup(StackPanel panel)
+        {
+            var radio = panel.Children.OfType<RadioButton>().FirstOrDefault(rb => rb.IsChecked == true);
+            return radio != null && radio.Content.ToString() == "Tak";
+        }
+
+        private string GetCheckedValuesFromPanel(StackPanel panel)
+        {
+            if (panel == null) return "";
+            var selected = panel.Children.OfType<CheckBox>().Where(cb => cb.IsChecked == true).Select(cb => cb.Content.ToString());
+            return string.Join(", ", selected);
+        }
+
+        private void UpdateProjectCard(ProjectCard existing, ProjectCard data)
+        {
+            // Sekcja 1: Informacje o ofercie
+            existing.NumberOfPeople = data.NumberOfPeople;
+            existing.IsSalaryVisible = data.IsSalaryVisible;
+
+            // Sekcja 2: Informacje o stanowisku i obowiązkach
+            existing.JobTitle = data.JobTitle;
+            existing.JobLevels = data.JobLevels;
+            existing.Department = data.Department;
+            existing.MainDuties = data.MainDuties;
+            existing.AdditionalDuties = data.AdditionalDuties;
+            existing.DevelopmentOpportunities = data.DevelopmentOpportunities; // Uzupełnione brakujące pole
+            existing.PlannedHiringDate = data.PlannedHiringDate;
+
+            // Sekcja 3: Wymagania dotyczące kandydata
+            existing.Education = data.Education;
+            existing.PreferredStudyFields = data.PreferredStudyFields;
+            existing.AdditionalCertifications = data.AdditionalCertifications;
+            existing.RequiredExperience = data.RequiredExperience;
+            existing.PreferredExperience = data.PreferredExperience;
+            existing.RequiredSkills = data.RequiredSkills;
+            existing.PreferredSkills = data.PreferredSkills;
+            existing.RequiredLanguages = data.RequiredLanguages;
+            existing.PreferredLanguages = data.PreferredLanguages;
+
+            // Sekcja 4: Warunki pracy
+            existing.EmploymentsForms = data.EmploymentsForms;
+            existing.GrossSalary = data.GrossSalary;
+            existing.BonusSystem = data.BonusSystem;
+            existing.AdditionalBenefits = data.AdditionalBenefits;
+            existing.WorkTools = data.WorkTools;
+            existing.WorkPlace = data.WorkPlace;
+            existing.WorkModes = data.WorkModes;
+            existing.WorkingHours = data.WorkingHours;
+
+            // Sekcja 5: Inne uwagi
+            existing.OtherRemarks = data.OtherRemarks;
         }
 
         private void Cancel_Click(object sender, RoutedEventArgs e)
         {
-            if (MessageBox.Show("Czy na pewno chcesz anulować wypełnianie formularza?", "Potwierdzenie", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+            if (MessageBox.Show("Czy na pewno chcesz anulować?", "Potwierdzenie", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
             {
                 _mainFrame.GoBack();
             }
@@ -364,7 +375,6 @@ namespace WpfApp1.Views
         private void FillFormWithProjectData()
         {
             if (_project == null) return;
-
             NumberOfPeopleBox.Text = _project.NumberOfPeople > 0 ? _project.NumberOfPeople.ToString() : "";
             JobTitleBox.Text = _project.JobTitle ?? "";
             DepartmentBox.Text = _project.Department ?? "";
@@ -384,10 +394,8 @@ namespace WpfApp1.Views
             WorkPlaceBox.Text = _project.WorkPlace ?? "";
             WorkingHoursBox.Text = _project.WorkingHours ?? "";
             OtherRemarksBox.Text = _project.OtherRemarks ?? "";
-
             if (_project.PlannedHiringDate.HasValue)
                 PlannedHiringDatePicker.SelectedDate = _project.PlannedHiringDate;
-
             SetCheckBoxesFromCommaSeparated(JobLevelsPanel, _project.JobLevels);
             SetCheckBoxesFromCommaSeparated(EducationPanel, _project.Education);
             SetCheckBoxesFromCommaSeparated(EmploymentFormsPanel, _project.EmploymentsForms);
@@ -504,7 +512,7 @@ namespace WpfApp1.Views
             }
         }
 
-        private bool ValidateRequiredFields()
+        internal bool ValidateRequiredFields()
         {
             bool isValid = true;
             // Ukryj wszystkie komunikaty
@@ -599,9 +607,8 @@ namespace WpfApp1.Views
             return isValid;
         }
 
-        private void ValidateTextBoxField(TextBox textBox, TextBlock errorBlock, string fieldName)
+        private bool ValidateTextBoxField(TextBox textBox, TextBlock errorBlock, string fieldName)
         {
-            // Resetuj styl błędu
             errorBlock.Visibility = Visibility.Collapsed;
             textBox.ClearValue(Border.BorderBrushProperty);
             textBox.ClearValue(Border.BorderThicknessProperty);
@@ -613,7 +620,9 @@ namespace WpfApp1.Views
                 errorBlock.Visibility = Visibility.Visible;
                 textBox.BorderBrush = Brushes.Red;
                 textBox.BorderThickness = new Thickness(1);
+                return false; // ZWRACA FALSE PRZY BŁĘDZIE
             }
+            return true; // ZWRACA TRUE, GDY OK
         }
         private void HideAllErrors()
         {

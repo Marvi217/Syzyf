@@ -163,11 +163,25 @@
                 <TextBlock Text="Pozostałe informacje" Margin="0,5,0,2"/>
                 <TextBox x:Name="OtherRemarksBox" AcceptsReturn="True" Height="60" Margin="0,0,0,10"/>
 
+                <!-- Zastąp istniejący StackPanel z przyciskami tym poniżej -->
+
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,30,0,0">
-                    <Button x:Name="SaveCardButton" Content="Zapisz kartę" Width="120" Margin="0,0,10,0" Click="SaveProjectCard_Click"/>
-                    <Button x:Name="CancelCardButton" Content="Anuluj kartę" Width="120" Click="Cancel_Click"/>
-                    <Button x:Name="SaveProjectButton" Content="Zapisz projekt" Width="120" Margin="20,0,10,0" Click="SaveProject_Click"/>
-                    <Button x:Name="CancelProjectButton" Content="Odrzuć projekt" Width="120" Click="Cancel_Click"/>
+
+                    <!-- Przycisk do zwykłego zapisu zmian (dla klienta i pracownika) -->
+                    <!-- Nazwa zmieniona na SaveChangesButton -->
+                    <Button x:Name="SaveChangesButton" 
+                        Content="Zapisz zmiany" 
+                        Width="120" 
+                        Margin="0,0,10,0" 
+                        Click="SaveChanges_Click"/>
+
+                    <!-- Przycisk do anulowania -->
+                    <!-- Nazwa pozostaje, bo jest poprawna w C# -->
+                    <Button x:Name="CancelCardButton" 
+                        Content="Anuluj" 
+                        Width="120" 
+                        Click="Cancel_Click"/>
+
                 </StackPanel>
 
             </StackPanel>

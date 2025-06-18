@@ -5,23 +5,16 @@
       Title="Szczegóły Projektu">
 
     <DockPanel LastChildFill="True">
-        <!-- Górne menu -->
         <local:MenuControl x:Name="TopMenu" DockPanel.Dock="Top"/>
 
-        <!-- Główna zawartość -->
         <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="20">
             <StackPanel Width="700">
 
-                <!-- Powrót -->
                 <Button Content="Powrót" Width="120" Margin="0,0,0,20" Click="Back_Click" HorizontalAlignment="Left"/>
 
-                <!-- Nagłówek -->
                 <TextBlock Text="Karta projektu" FontSize="24" FontWeight="Bold" Margin="0,0,0,20"/>
 
-                <!-- Szczegóły -->
                 <StackPanel x:Name="DetailsContainer"/>
-                <!-- Dodaj do swojego XAML w ProjectDetailsPage.xaml -->
-
 
                 <TextBlock x:Name="AcceptedStatusTextBlock"
                    Foreground="Green"
@@ -29,8 +22,6 @@
                    Margin="5"
                    Visibility="Collapsed" />
 
-
-                <!-- Akcje -->
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,30,0,0">
                     <Button x:Name="AssignRecruiterButton"
                         Content="Przydziel Rekrutera"
@@ -38,9 +29,17 @@
                         Margin="5"
                         Click="AssignRecruiterButton_Click" />
                     <Button x:Name="AcceptButton2" Content="Akceptuj2" Width="120" Margin="0,0,10,0" Click="Accept_Click2"/>
+                    <Button x:Name="RejectButton2" Content="Odrzuć" Width="120" Margin="0,0,10,0" Click="Reject_Click2"/>
                     <Button x:Name="AcceptButton" Content="Akceptuj" Width="120" Margin="0,0,10,0" Click="Accept_Click"/>
                     <Button x:Name="RejectButton" Content="Odrzuć" Width="120" Margin="0,0,10,0" Click="Reject_Click"/>
                     <Button x:Name="EditButton" Content="Edytuj" Width="120" Click="EditProject_Click"/>
+                    <Button x:Name="FullRejectButton" 
+                        Content="Zrezygnuj z projektu" 
+                        Click="Reject_Click_Full" 
+                        Background="IndianRed" 
+                        Foreground="White"
+                        Visibility="Collapsed"
+                        />
                 </StackPanel>
 
             </StackPanel>

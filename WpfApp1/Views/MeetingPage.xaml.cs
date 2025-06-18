@@ -127,7 +127,6 @@ namespace WpfApp1.Views
                 .ToList();
         }
 
-
         public void UpdateMonthYearDisplay()
         {
             var culture = new CultureInfo("pl-PL");
